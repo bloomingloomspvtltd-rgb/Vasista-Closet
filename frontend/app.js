@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://vasista-closet-1.onrender.com";
 
 const productDetailEl = document.getElementById("product-detail");
 const similarListEl = document.getElementById("similar-list");

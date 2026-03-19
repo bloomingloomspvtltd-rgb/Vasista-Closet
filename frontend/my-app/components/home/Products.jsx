@@ -4,26 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { getProducts } from "@/lib/storeApi";
+import { getRuntimeApiBase } from "@/lib/apiBase";
 import { useCart } from "@/lib/CartContext";
 import { useWishlist } from "@/lib/WishlistContext";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-function getRuntimeApiBase() {
-  if (typeof window === "undefined") return API_URL;
-  const host = window.location.hostname;
-  if (!host || host === "localhost" || host === "127.0.0.1") return API_URL;
-  try {
-    const parsed = new URL(API_URL);
-    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
-      const port = parsed.port || "8000";
-      return `${parsed.protocol}//${host}:${port}`;
-    }
-  } catch (err) {
-    return API_URL;
-  }
-  return API_URL;
-}
 
 function normalizeImageUrl(url) {
   if (!url) return "";

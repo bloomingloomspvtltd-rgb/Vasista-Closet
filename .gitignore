@@ -20,7 +20,7 @@ __pycache__/
 !.env.example
 
 # App data
-backend/uploads/
+# backend/uploads/  # keep uploads in repo for Render if you rely on local files
 
 # OS
 .DS_Store

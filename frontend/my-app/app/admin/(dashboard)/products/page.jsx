@@ -5,8 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import AdminTopbar from "../../../../components/admin/AdminTopbar";
 import { apiFetch, uploadAdminImage } from "../../../../lib/adminApi";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 function formatCurrency(value) {
   const amount = Number(value || 0);
   return new Intl.NumberFormat("en-IN", {

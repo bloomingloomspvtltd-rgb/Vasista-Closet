@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { getApiBase } from "./apiBase";
 
 export async function storeFetch(path, options = {}) {
   const headers = {
@@ -6,7 +6,7 @@ export async function storeFetch(path, options = {}) {
     ...(options.headers || {}),
   };
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${getApiBase()}${path}`, {
     ...options,
     headers,
   });

@@ -1,4 +1,4 @@
-﻿const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+﻿import { getApiBase } from "./apiBase";
 
 export function getToken() {
   if (typeof window === "undefined") return null;
@@ -25,7 +25,7 @@ export async function apiFetch(path, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${getApiBase()}${path}`, {
     ...options,
     headers,
   });
@@ -57,7 +57,7 @@ export async function uploadAdminImage(file) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}/admin/upload`, {
+  const response = await fetch(`${getApiBase()}/admin/upload`, {
     method: "POST",
     headers,
     body: form,
