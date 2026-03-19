@@ -1,0 +1,210 @@
+/* =====================
+   INSTAGRAM SECTION
+===================== */
+.instagram-section {
+  padding: 60px 40px;
+  background: #fff;
+}
+
+.instagram-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 50px;
+}
+
+/* GRID */
+/* REEL STAGE */
+.reel-stage {
+  position: relative;
+  height: 560px;
+  margin: 10px auto 30px;
+  max-width: 1080px;
+  display: grid;
+  place-items: center;
+  overflow: visible;
+}
+
+.reel-card {
+  position: absolute;
+  width: min(270px, 38vw);
+  aspect-ratio: 9 / 16;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 24px 50px rgba(25, 16, 8, 0.18);
+  transition: transform 0.35s ease, box-shadow 0.35s ease, filter 0.35s ease;
+  background: #eee;
+  cursor: pointer;
+  user-select: none;
+}
+
+.reel-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reel-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.reel-card:hover .reel-overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.reel-icon {
+  width: 56px;
+  height: 56px;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.reel-card:hover .reel-icon {
+  opacity: 1;
+}
+
+.reel-center {
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.reel-left {
+  left: 34%;
+  top: 52%;
+  z-index: 3;
+  transform: translate(-50%, -50%) scale(0.92);
+  filter: saturate(0.9);
+}
+
+.reel-right {
+  left: 66%;
+  top: 52%;
+  z-index: 3;
+  transform: translate(-50%, -50%) scale(0.92);
+  filter: saturate(0.9);
+}
+
+.reel-far-left {
+  left: 18%;
+  top: 54%;
+  z-index: 1;
+  transform: translate(-50%, -50%) scale(0.82);
+  filter: saturate(0.8) blur(0.2px);
+}
+
+.reel-far-right {
+  left: 82%;
+  top: 54%;
+  z-index: 1;
+  transform: translate(-50%, -50%) scale(0.82);
+  filter: saturate(0.8) blur(0.2px);
+}
+
+.reel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 26px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 6;
+}
+
+.reel-arrow-left {
+  left: 6px;
+}
+
+.reel-arrow-right {
+  right: 6px;
+}
+
+/* HANDLE */
+.instagram-handle {
+  display: block;
+  text-align: center;
+  font-size: 1.2rem;
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .reel-stage {
+    height: 520px;
+  }
+
+  .instagram-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .instagram-section {
+    padding: 40px 15px;
+  }
+
+  .reel-stage {
+    height: 460px;
+    max-width: 92vw;
+  }
+
+  .reel-far-left,
+  .reel-far-right {
+    display: none;
+  }
+
+  .instagram-title {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+  }
+
+  .reel-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .instagram-handle {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .reel-stage {
+    height: 420px;
+  }
+
+  .reel-left,
+  .reel-right {
+    display: none;
+  }
+
+  .instagram-title {
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+  }
+
+  .reel-icon {
+    width: 36px;
+    height: 36px;
+  }
+}

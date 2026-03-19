@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visista Products</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">Visista Closet</div>
+      <div class="subtitle">Product view with similar products below</div>
+    </header>
+
+    <main class="page">
+      <section class="product-hero">
+        <div id="gallery" class="gallery">
+          <div id="thumbs" class="thumbs"></div>
+          <div class="main-image">
+            <img id="main-image" alt="Product image" />
+          </div>
+        </div>
+
+        <div id="product-detail" class="product-detail">
+          <div class="placeholder">Loading product…</div>
+        </div>
+      </section>
+
+      <section id="similar-block" class="similar-block">
+        <h3>Similar Products</h3>
+        <div id="similar-list" class="similar-list"></div>
+        <div id="similar-empty" class="empty" hidden>No similar products found.</div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

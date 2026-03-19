@@ -1,0 +1,27 @@
+# Node
+node_modules/
+.npm/
+.pnpm-store/
+.next/
+dist/
+build/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.env/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# App data
+backend/uploads/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,66 @@
+/* =====================
+   CATEGORY SECTION
+===================== */
+.category-section {
+  padding: 60px 40px;
+  background: #fff;
+}
+
+/* GRID */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* CARD */
+.category-card {
+  position: relative;
+  height: 520px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* IMAGE */
+.category-image {
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+/* ZOOM EFFECT */
+.category-card:hover .category-image {
+  transform: scale(1.08);
+}
+
+/* OVERLAY */
+.category-overlay {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: #ffffff;
+  z-index: 2;
+}
+
+.category-overlay h3 {
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+/* BUTTON */
+.category-overlay button {
+  background: #e91e63;
+  border: none;
+  padding: 14px 32px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.category-overlay button:hover {
+  background: #c2185b;
+}

@@ -1,0 +1,130 @@
+.blog-page {
+  background: #fff;
+  padding: 40px 20px 80px;
+}
+
+.blog-hero {
+  max-width: 1100px;
+  margin: 0 auto 32px;
+  padding: 36px;
+  border-radius: 16px;
+  background: radial-gradient(circle at top right, #f9f0ff, #fff8f1 55%, #ffffff);
+  border: 1px solid #efe3dc;
+}
+
+.blog-kicker {
+  display: inline-block;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #8a6b57;
+  margin-bottom: 10px;
+}
+
+.blog-hero h1 {
+  margin: 0 0 12px;
+  font-size: 2.1rem;
+  line-height: 1.2;
+}
+
+.blog-hero p {
+  margin: 0;
+  color: #5a4a40;
+  line-height: 1.7;
+}
+
+.blog-list {
+  max-width: 1100px;
+  margin: 0 auto 32px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.blog-card {
+  border: 1px solid #efe3dc;
+  border-radius: 14px;
+  padding: 22px;
+  background: #fffaf7;
+  display: grid;
+  gap: 10px;
+}
+
+.blog-date {
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #9b7d6a;
+}
+
+.blog-card h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.blog-card p {
+  margin: 0;
+  color: #5a4a40;
+  line-height: 1.6;
+}
+
+.blog-link {
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #1a1a1a;
+}
+
+.blog-cta {
+  max-width: 1100px;
+  margin: 0 auto;
+  border-radius: 16px;
+  border: 1px solid #efe3dc;
+  padding: 24px;
+  background: #fff4f1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.blog-cta h2 {
+  margin: 0 0 6px;
+}
+
+.blog-cta p {
+  margin: 0;
+  color: #5a4a40;
+}
+
+.blog-cta-link {
+  text-decoration: none;
+  background: #1a1a1a;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .blog-list {
+    grid-template-columns: 1fr;
+  }
+
+  .blog-cta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .blog-hero {
+    padding: 28px 22px;
+  }
+
+  .blog-hero h1 {
+    font-size: 1.8rem;
+  }
+}

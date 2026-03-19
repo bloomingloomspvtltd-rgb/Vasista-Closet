@@ -1,0 +1,130 @@
+from datetime import datetime
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+
+from ..auth import get_current_user
+from ..db import get_db
+from ..utils import serialize_doc, to_object_id
+from ..services.order_email_service import send_admin_order_email, send_order_email
+
+router = APIRouter(prefix="/orders", tags=["orders"])
+
+
+class OrderItem(BaseModel):
+    product_id: Optional[str] = None
+    name: str
+    price: float = Field(ge=0)
+    quantity: int = Field(ge=1)
+
+
+class OrderBase(BaseModel):
+    customer_id: Optional[str] = None
+    items: List[OrderItem]
+    status: str = Field(default="pending")
+    subtotal: float = Field(ge=0)
+    discount_id: Optional[str] = None
+    discount_amount: float = Field(default=0, ge=0)
+    total: float = Field(ge=0)
+
+
+class OrderCreate(OrderBase):
+    pass
+
+
+class OrderUpdate(BaseModel):
+    customer_id: Optional[str] = None
+    items: Optional[List[OrderItem]] = None
+    status: Optional[str] = None
+    subtotal: Optional[float] = Field(default=None, ge=0)
+    discount_id: Optional[str] = None
+    discount_amount: Optional[float] = Field(default=None, ge=0)
+    total: Optional[float] = Field(default=None, ge=0)
+
+
+@router.get("", dependencies=[Depends(get_current_user)])
+async def list_orders():
+    db = get_db()
+    items = await db.orders.find().sort("created_at", -1).to_list(100)
+    return [serialize_doc(doc) for doc in items]
+
+
+@router.post("")
+async def create_order(payload: OrderCreate):
+    db = get_db()
+    doc = payload.model_dump()
+    now = datetime.utcnow()
+    doc["created_at"] = now
+    doc["updated_at"] = now
+    result = await db.orders.insert_one(doc)
+    created = await db.orders.find_one({"_id": result.inserted_id})
+    if created:
+        await send_order_email(
+            db,
+            created,
+            "Order confirmed - Cash on Delivery - Visista Closet",
+            "Your order has been placed successfully and is confirmed.",
+            "It will be delivered soon. Please keep cash ready at delivery.",
+        )
+        await send_admin_order_email(
+            db,
+            created,
+            "New order received - Visista Closet",
+        )
+    return serialize_doc(created)
+
+
+@router.get("/customer/{customer_id}")
+async def list_orders_by_customer(customer_id: str):
+    db = get_db()
+    items = (
+        await db.orders.find({"customer_id": customer_id})
+        .sort("created_at", -1)
+        .to_list(100)
+    )
+    return [serialize_doc(doc) for doc in items]
+
+
+@router.get("/{order_id}", dependencies=[Depends(get_current_user)])
+async def get_order(order_id: str):
+    db = get_db()
+    try:
+        oid = to_object_id(order_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid order id")
+    doc = await db.orders.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return serialize_doc(doc)
+
+
+@router.put("/{order_id}", dependencies=[Depends(get_current_user)])
+async def update_order(order_id: str, payload: OrderUpdate):
+    db = get_db()
+    try:
+        oid = to_object_id(order_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid order id")
+    updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    updates["updated_at"] = datetime.utcnow()
+    result = await db.orders.update_one({"_id": oid}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Order not found")
+    doc = await db.orders.find_one({"_id": oid})
+    return serialize_doc(doc)
+
+
+@router.delete("/{order_id}", dependencies=[Depends(get_current_user)])
+async def delete_order(order_id: str):
+    db = get_db()
+    try:
+        oid = to_object_id(order_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid order id")
+    result = await db.orders.delete_one({"_id": oid})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return {"status": "deleted"}

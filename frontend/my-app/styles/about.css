@@ -1,0 +1,150 @@
+.about-page {
+  background: #fff;
+  padding: 40px 20px 80px;
+}
+
+.about-hero {
+  max-width: 1100px;
+  margin: 0 auto 32px;
+  border-radius: 16px;
+  padding: 40px 36px;
+  background: radial-gradient(circle at top left, #fdf0f6, #fff7f0 55%, #ffffff);
+  border: 1px solid #f3e5de;
+}
+
+.about-hero-content {
+  max-width: 700px;
+}
+
+.about-kicker {
+  display: inline-block;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #a0725d;
+  margin-bottom: 10px;
+}
+
+.about-hero h1 {
+  font-size: 2.2rem;
+  line-height: 1.2;
+  margin: 0 0 16px;
+}
+
+.about-hero p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #5b483f;
+  margin: 0;
+}
+
+.about-section {
+  max-width: 1100px;
+  margin: 0 auto 32px;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.about-card {
+  border: 1px solid #efe3dc;
+  border-radius: 14px;
+  padding: 22px;
+  background: #fffaf7;
+}
+
+.about-card h2 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+}
+
+.about-card p {
+  margin: 0;
+  color: #5a4a40;
+  line-height: 1.6;
+}
+
+.about-values {
+  padding: 10px 0 0;
+}
+
+.about-values h2 {
+  margin: 0 0 16px;
+  font-size: 1.6rem;
+}
+
+.about-values-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.about-values-grid h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.about-values-grid p {
+  margin: 0;
+  color: #5a4a40;
+  line-height: 1.6;
+}
+
+.about-cta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  border-radius: 16px;
+  border: 1px solid #efe3dc;
+  padding: 24px;
+  background: #fff7f2;
+}
+
+.about-cta h2 {
+  margin: 0 0 6px;
+}
+
+.about-cta p {
+  margin: 0;
+  color: #5a4a40;
+}
+
+.about-cta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  background: #1a1a1a;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .about-grid,
+  .about-values-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-cta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .about-hero {
+    padding: 28px 22px;
+  }
+
+  .about-hero h1 {
+    font-size: 1.8rem;
+  }
+}

@@ -1,0 +1,197 @@
+/* =====================
+   CURATED COLLECTIONS SECTION
+===================== */
+.curated-collections-section {
+  padding: 60px 40px;
+  background: #fff;
+}
+
+.curated-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 50px;
+}
+
+/* CAROUSEL WRAPPER */
+.curated-carousel-wrapper {
+  position: relative;
+}
+
+/* GRID */
+.curated-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* CARD */
+.curated-card {
+  position: relative;
+  height: 520px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #e8e8e8;
+}
+
+/* IMAGE */
+.curated-image {
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+/* ZOOM EFFECT */
+.curated-card:hover .curated-image {
+  transform: scale(1.08);
+}
+
+/* OVERLAY */
+.curated-overlay {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: #ffffff;
+  z-index: 2;
+}
+
+.curated-overlay h3 {
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+/* BUTTON */
+.curated-overlay .shop-now-btn {
+  background: #e91e63;
+  border: none;
+  padding: 14px 32px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.curated-overlay .shop-now-btn:hover {
+  background: #c2185b;
+}
+
+/* ARROWS - OVERLAPPING */
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #e91e63;
+  border: none;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.arrow:hover {
+  background: #c2185b;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.arrow-left {
+  left: -25px;
+}
+
+.arrow-right {
+  right: -25px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .curated-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+
+  .curated-card {
+    height: 400px;
+  }
+
+  .curated-title {
+    font-size: 2rem;
+  }
+
+  .arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .curated-collections-section {
+    padding: 40px 15px;
+  }
+
+  .curated-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .curated-card {
+    height: 320px;
+  }
+
+  .curated-title {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+  }
+
+  .curated-overlay h3 {
+    font-size: 18px;
+  }
+
+  .curated-overlay .shop-now-btn {
+    padding: 12px 28px;
+    font-size: 12px;
+  }
+
+  .arrow {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .curated-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .curated-card {
+    height: 280px;
+  }
+
+  .curated-title {
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+  }
+
+  .curated-overlay h3 {
+    font-size: 16px;
+  }
+
+  .arrow {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+}
+
