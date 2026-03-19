@@ -211,3 +211,103 @@ footer {
   border-top: 1px solid #eeeeee;
   font-size: 14px;
 }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .hero,
+  .collections-banner {
+    height: 70vh;
+    padding: 0 48px;
+    background-size: cover;
+  }
+
+  section {
+    padding: 64px 48px;
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .segment-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero,
+  .collections-banner {
+    height: 62vh;
+    padding: 0 28px;
+    background-position: center;
+  }
+
+  .hero h1,
+  .collections-banner h2 {
+    font-size: 36px;
+  }
+
+  .hero p,
+  .collections-banner p {
+    font-size: 16px;
+  }
+
+  .hero-actions,
+  .banner-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-actions button,
+  .banner-actions button {
+    width: 100%;
+    max-width: 240px;
+  }
+
+  section {
+    padding: 56px 28px;
+  }
+
+  section h2 {
+    font-size: 26px;
+    margin-bottom: 28px;
+  }
+
+  .category-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .segment {
+    padding: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero,
+  .collections-banner {
+    height: 56vh;
+    padding: 0 18px;
+  }
+
+  .hero h1,
+  .collections-banner h2 {
+    font-size: 30px;
+  }
+
+  .hero p,
+  .collections-banner p {
+    font-size: 14px;
+  }
+
+  section {
+    padding: 48px 18px;
+  }
+
+  .segment {
+    padding: 24px;
+  }
+
+  .whatsapp-cta {
+    padding: 36px 18px;
+  }
+}
