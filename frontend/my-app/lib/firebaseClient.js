@@ -9,4 +9,8 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-export const firebaseApp = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+export function getFirebaseApp() {
+  if (typeof window === "undefined") return null;
+  if (!firebaseConfig.apiKey) return null;
+  return getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+}

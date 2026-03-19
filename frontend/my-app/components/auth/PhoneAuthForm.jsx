@@ -4,13 +4,16 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GoogleAuthProvider, getAuth, signInWithPopup } from "firebase/auth";
 
-import { firebaseApp } from "@/lib/firebaseClient";
+import { getFirebaseApp } from "@/lib/firebaseClient";
 import { upsertCustomerByEmail } from "@/lib/storeApi";
 import { setCustomerSession } from "@/lib/customerSession";
 
 export default function PhoneAuthForm({ title, subtitle, footer }) {
   const router = useRouter();
-  const auth = useMemo(() => getAuth(firebaseApp), []);
+  const auth = useMemo(() => {
+    const app = getFirebaseApp();
+    return app ? getAuth(app) : null;
+  }, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -18,6 +21,11 @@ export default function PhoneAuthForm({ title, subtitle, footer }) {
     setError("");
     setLoading(true);
     try {
+      if (!auth) {
+        setError("Login is not configured yet.");
+        setLoading(false);
+        return;
+      }
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result?.user;
