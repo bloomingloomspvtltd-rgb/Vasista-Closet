@@ -2,12 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getFeaturedCategories } from "@/lib/categoryData";
 
 export default function Navbar() {
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMobileDropdown, setOpenMobileDropdown] = useState(null);
+  const [searchValue, setSearchValue] = useState("");
   const featured = getFeaturedCategories();
   const featuredMap = featured.reduce((acc, item) => {
     acc[item.slug] = item;
@@ -45,6 +48,13 @@ export default function Navbar() {
 
   const toggleMobileDropdown = (key) => {
     setOpenMobileDropdown((prev) => (prev === key ? null : key));
+  };
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    const trimmed = searchValue.trim();
+    if (!trimmed) return;
+    router.push(`/products?search=${encodeURIComponent(trimmed)}`);
   };
 
   return (
@@ -90,18 +100,22 @@ export default function Navbar() {
         <div className="nav-icons">
 
           {/* SEARCH BAR */}
-          <div className="search-bar">
+          <form className="search-bar" onSubmit={handleSearchSubmit}>
             <input
               type="text"
               placeholder="What are you looking for?"
+              value={searchValue}
+              onChange={(event) => setSearchValue(event.target.value)}
             />
-            <Image
-              src="/icons/search.png"
-              alt="Search"
-              width={18}
-              height={18}
-            />
-          </div>
+            <button className="search-button" type="submit" aria-label="Search">
+              <Image
+                src="/icons/search.png"
+                alt=""
+                width={18}
+                height={18}
+              />
+            </button>
+          </form>
 
           {/* ICONS */}
           <Link href="/account" aria-label="Account">

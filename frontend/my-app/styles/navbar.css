@@ -109,6 +109,16 @@
   color: #9C6F6F;
 }
 
+.search-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 /* =====================
    ICONS
 ===================== */

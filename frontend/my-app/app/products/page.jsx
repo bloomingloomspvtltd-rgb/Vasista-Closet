@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import { getProducts } from "@/lib/storeApi";
 import { getRuntimeApiBase } from "@/lib/apiBase";
@@ -53,6 +54,9 @@ function getCategoryLabel(product) {
 export default function ProductsPage() {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const searchParams = useSearchParams();
+  const searchTerm = (searchParams.get("search") || "").trim();
+  const normalizedSearch = searchTerm.toLowerCase();
   const [products, setProducts] = useState([]);
   const [openFilters, setOpenFilters] = useState({
     price: true,
@@ -166,12 +170,29 @@ export default function ProductsPage() {
     return Array.from(selectedCuts).some((cut) => tags.has(cut));
   };
 
+  const matchesSearch = (product) => {
+    if (!normalizedSearch) return true;
+    const categories = Array.isArray(product?.categories) ? product.categories : [];
+    const tags = Array.isArray(product?.tags) ? product.tags : [];
+    const haystack = [
+      product?.name,
+      product?.category,
+      ...categories,
+      ...tags,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(normalizedSearch);
+  };
+
   const filteredProducts = products.filter(
     (product) =>
       matchesPrice(Number(product?.price || 0)) &&
       matchesSizes(product) &&
       matchesColors(product) &&
-      matchesCuts(product)
+      matchesCuts(product) &&
+      matchesSearch(product)
   );
 
   const toggleFilter = (section) => {
