@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
 import { getProducts } from "@/lib/storeApi";
 import { getRuntimeApiBase } from "@/lib/apiBase";
@@ -56,8 +55,7 @@ function getCategoryLabel(product) {
 export default function ProductsPage() {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const searchParams = useSearchParams();
-  const searchTerm = (searchParams.get("search") || "").trim();
+  const [searchTerm, setSearchTerm] = useState("");
   const normalizedSearch = searchTerm.toLowerCase();
   const [products, setProducts] = useState([]);
   const [openFilters, setOpenFilters] = useState({
@@ -81,6 +79,17 @@ export default function ProductsPage() {
       }
     };
     load();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const updateSearch = () => {
+      const params = new URLSearchParams(window.location.search);
+      setSearchTerm((params.get("search") || "").trim());
+    };
+    updateSearch();
+    window.addEventListener("popstate", updateSearch);
+    return () => window.removeEventListener("popstate", updateSearch);
   }, []);
 
   const priceRanges = [
