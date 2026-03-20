@@ -1,8 +1,13 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { getFeaturedCategories } from "@/lib/categoryData";
 
 export default function Navbar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openMobileDropdown, setOpenMobileDropdown] = useState(null);
   const featured = getFeaturedCategories();
   const featuredMap = featured.reduce((acc, item) => {
     acc[item.slug] = item;
@@ -23,6 +28,25 @@ export default function Navbar() {
     return `/products/${encodeURIComponent(backendName)}`;
   };
 
+  const toggleMobileMenu = () => {
+    setMobileOpen((prev) => {
+      const next = !prev;
+      if (!next) {
+        setOpenMobileDropdown(null);
+      }
+      return next;
+    });
+  };
+
+  const closeMobileMenu = () => {
+    setMobileOpen(false);
+    setOpenMobileDropdown(null);
+  };
+
+  const toggleMobileDropdown = (key) => {
+    setOpenMobileDropdown((prev) => (prev === key ? null : key));
+  };
+
   return (
     <header className="header">
 
@@ -35,7 +59,19 @@ export default function Navbar() {
       <div className="header-main">
 
         {/* LEFT EMPTY SPACE (FOR CENTER ALIGNMENT) */}
-        <div></div>
+        <div className="header-left">
+          <button
+            className={`mobile-menu-button ${mobileOpen ? "open" : ""}`}
+            type="button"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+            onClick={toggleMobileMenu}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </div>
 
         {/* LOGO */}
         <div className="logo">
@@ -117,6 +153,53 @@ export default function Navbar() {
             <Link href={categoryHref("new-arrivals")}>New</Link>
           </li>
 
+        </ul>
+      </nav>
+
+      {/* MOBILE MENU */}
+      <nav className={`mobile-menu ${mobileOpen ? "open" : ""}`} aria-hidden={!mobileOpen}>
+        <ul className="mobile-menu-list">
+          <li className="mobile-item">
+            <button
+              type="button"
+              className="mobile-parent"
+              aria-expanded={openMobileDropdown === "kurtas"}
+              onClick={() => toggleMobileDropdown("kurtas")}
+            >
+              Kurtas
+              <span className="mobile-caret" />
+            </button>
+            <ul className={`mobile-submenu ${openMobileDropdown === "kurtas" ? "open" : ""}`}>
+              <li>
+                <Link href={categoryHref("kurtis")} onClick={closeMobileMenu}>
+                  Kurtis
+                </Link>
+              </li>
+              <li>
+                <Link href={categoryHref("kurta-sets")} onClick={closeMobileMenu}>
+                  Kurta Sets
+                </Link>
+              </li>
+            </ul>
+          </li>
+
+          <li className="mobile-item">
+            <Link href={categoryHref("coord-sets")} onClick={closeMobileMenu}>
+              Coord Sets
+            </Link>
+          </li>
+
+          <li className="mobile-item">
+            <Link href={categoryHref("premium-collection")} onClick={closeMobileMenu}>
+              Premium Collection
+            </Link>
+          </li>
+
+          <li className="mobile-item">
+            <Link href={categoryHref("new-arrivals")} onClick={closeMobileMenu}>
+              New
+            </Link>
+          </li>
         </ul>
       </nav>
 
