@@ -89,7 +89,25 @@ export default function ProductsPage() {
     };
     updateSearch();
     window.addEventListener("popstate", updateSearch);
-    return () => window.removeEventListener("popstate", updateSearch);
+
+    const originalPush = window.history.pushState;
+    const originalReplace = window.history.replaceState;
+
+    window.history.pushState = function (...args) {
+      originalPush.apply(this, args);
+      updateSearch();
+    };
+
+    window.history.replaceState = function (...args) {
+      originalReplace.apply(this, args);
+      updateSearch();
+    };
+
+    return () => {
+      window.removeEventListener("popstate", updateSearch);
+      window.history.pushState = originalPush;
+      window.history.replaceState = originalReplace;
+    };
   }, []);
 
   const priceRanges = [
