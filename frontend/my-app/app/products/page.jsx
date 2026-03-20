@@ -10,6 +10,8 @@ import { useCart } from "@/lib/CartContext";
 import { useWishlist } from "@/lib/WishlistContext";
 import { normalizeCategoryLabel } from "@/lib/categoryLabel";
 
+export const dynamic = "force-dynamic";
+
 function normalizeImageUrl(url) {
   if (!url) return "";
   if (url.startsWith("data:")) return url;
