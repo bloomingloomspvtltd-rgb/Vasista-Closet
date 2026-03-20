@@ -7,6 +7,7 @@ import { getProduct } from "@/lib/storeApi";
 import { getRuntimeApiBase } from "@/lib/apiBase";
 import { useCart } from "@/lib/CartContext";
 import { useWishlist } from "@/lib/WishlistContext";
+import { normalizeCategoryLabel } from "@/lib/categoryLabel";
 
 const fallbackImages = [
   "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=1200&h=1600&fit=crop",
@@ -39,7 +40,7 @@ function normalizeImageUrl(url) {
 function getCategoryLabel(product) {
   const categories = Array.isArray(product?.categories) ? product.categories : [];
   const primary = product?.category || categories[0];
-  return primary || "Collection";
+  return normalizeCategoryLabel(primary) || "Collection";
 }
 
 function getPrimaryImage(product) {

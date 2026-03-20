@@ -32,7 +32,7 @@ export default function Footer() {
             </h3>
             <ul className={`footer-menu ${openSections.resources ? "open" : ""}`}>
               <li><a href="/products/coordsets">Coord Sets</a></li>
-              <li><a href="/products/kurthas">Kurthas</a></li>
+              <li><a href="/products/kurtas">Kurtas</a></li>
             </ul>
           </div>
 

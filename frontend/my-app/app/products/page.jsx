@@ -7,6 +7,7 @@ import { getProducts } from "@/lib/storeApi";
 import { getRuntimeApiBase } from "@/lib/apiBase";
 import { useCart } from "@/lib/CartContext";
 import { useWishlist } from "@/lib/WishlistContext";
+import { normalizeCategoryLabel } from "@/lib/categoryLabel";
 
 function normalizeImageUrl(url) {
   if (!url) return "";
@@ -46,7 +47,7 @@ function getPrimaryImage(product) {
 function getCategoryLabel(product) {
   const categories = Array.isArray(product?.categories) ? product.categories : [];
   const primary = product?.category || categories[0];
-  return primary || "Uncategorized";
+  return normalizeCategoryLabel(primary) || "Uncategorized";
 }
 
 export default function ProductsPage() {
