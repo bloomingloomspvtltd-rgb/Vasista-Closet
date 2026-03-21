@@ -1,18 +1,11 @@
-﻿"use client";
+﻿
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 
 import AdminTopbar from "../../../../components/admin/AdminTopbar";
 import { apiFetch, uploadAdminImage } from "../../../../lib/adminApi";
-
-function formatCurrency(value) {
-  const amount = Number(value || 0);
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { getRuntimeApiBase } from "../../../../lib/apiBase";
 
 function toNumber(value, fallback = 0) {
   const parsed = Number(value);
@@ -24,6 +17,69 @@ function splitList(value) {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function normalizeImageUrl(url) {
+  if (!url) return "";
+  if (url.startsWith("data:")) return url;
+  const base = getRuntimeApiBase();
+  if (url.startsWith("/")) return `${base}${url}`;
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+        return `${base}${parsed.pathname}${parsed.search}`;
+      }
+      if (parsed.pathname.startsWith("/uploads/")) {
+        return `${base}${parsed.pathname}`;
+      }
+    } catch (err) {
+      return url;
+    }
+    return url;
+  }
+  return `${base}/${url}`;
+}
+
+function getPrimaryImage(product) {
+  const colors = Array.isArray(product?.colors) ? product.colors : [];
+  if (colors.length > 0) {
+    const firstColor = colors[0];
+    const colorImages = Array.isArray(firstColor?.images) ? firstColor.images : [];
+    if (colorImages.length > 0) return normalizeImageUrl(colorImages[0]);
+    if (firstColor?.image) return normalizeImageUrl(firstColor.image);
+  }
+  const images = Array.isArray(product?.images) ? product.images : [];
+  if (images.length > 0) return normalizeImageUrl(images[0]);
+  return "";
+}
+
+function getInventoryInfo(product) {
+  const variants = Array.isArray(product?.variants) ? product.variants : [];
+  if (variants.length > 0) {
+    const total = variants.reduce(
+      (sum, variant) => sum + toNumber(variant?.count ?? 0, 0),
+      0
+    );
+    const variantCount = variants.filter((variant) => variant?.size || variant?.color).length;
+    return {
+      count: total,
+      label: `${total} in stock for ${variantCount || 0} variants`,
+    };
+  }
+  const inventory = toNumber(product?.inventory ?? 0, 0);
+  return {
+    count: inventory,
+    label: `${inventory} in stock`,
+  };
+}
+
+function getStatusTone(status) {
+  const value = (status || "active").toLowerCase();
+  if (value === "active") return "admin-status-good";
+  if (value === "draft") return "admin-status-warn";
+  if (value === "archived") return "admin-status-neutral";
+  return "admin-status-info";
 }
 
 export default function ProductsPage() {
@@ -38,6 +94,9 @@ export default function ProductsPage() {
   const [formError, setFormError] = useState("");
   const [uploadError, setUploadError] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -58,7 +117,36 @@ export default function ProductsPage() {
   const [uploadColor, setUploadColor] = useState("");
   const [uploadColorTouched, setUploadColorTouched] = useState(false);
 
-  const totalsLabel = useMemo(() => `${products.length} total`, [products.length]);
+  const statusCounts = useMemo(() => {
+    return products.reduce(
+      (acc, product) => {
+        const value = (product?.status || "active").toLowerCase();
+        acc[value] = (acc[value] || 0) + 1;
+        acc.all += 1;
+        return acc;
+      },
+      { all: 0, active: 0, draft: 0, archived: 0 }
+    );
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    return products.filter((product) => {
+      const statusValue = (product?.status || "active").toLowerCase();
+      if (activeTab !== "all" && statusValue !== activeTab) return false;
+      if (!normalizedSearch) return true;
+      const categoriesList = Array.isArray(product?.categories)
+        ? product.categories
+        : product?.category
+          ? [product.category]
+          : [];
+      const haystack = [product?.name, product?.sku, ...categoriesList]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(normalizedSearch);
+    });
+  }, [products, activeTab, searchQuery]);
 
   const resetForm = () => {
     setEditingId(null);
@@ -114,7 +202,6 @@ export default function ProductsPage() {
     loadProducts();
     loadCategories();
   }, []);
-
   const handleEdit = (product) => {
     setEditingId(product.id);
     setName(product.name || "");
@@ -143,6 +230,7 @@ export default function ProductsPage() {
     setUploadColorTouched(false);
     setFormError("");
     setUploadError("");
+    setShowForm(true);
   };
 
   const handleDelete = async (product) => {
@@ -247,13 +335,13 @@ export default function ProductsPage() {
       }
       await loadProducts();
       resetForm();
+      setShowForm(false);
     } catch (err) {
       setFormError(err?.message || "Failed to save product.");
     } finally {
       setSaving(false);
     }
   };
-
   function parseVariants(value) {
     if (!value.trim()) return [];
     return value
@@ -282,7 +370,7 @@ export default function ProductsPage() {
   function parseSizes(value) {
     if (!value.trim()) return [];
     const entries = value
-      .split(/\n|,/)
+      .split(/\n|,/) 
       .map((entry) => entry.trim())
       .filter(Boolean)
       .map((entry) => {
@@ -301,11 +389,6 @@ export default function ProductsPage() {
     return Array.from(byName.values());
   }
 
-  function deriveColors(variants) {
-    if (!Array.isArray(variants)) return [];
-    const names = Array.from(new Set(variants.map((variant) => variant.color).filter(Boolean)));
-    return names.map((name) => ({ name }));
-  }
 
   function parseColorImages(value) {
     if (!value.trim()) return [];
@@ -455,7 +538,6 @@ export default function ProductsPage() {
       .filter(Boolean)
       .join(", ");
   }
-
   const colorNames = useMemo(() => {
     if (!hasVariants) return [];
     const variants = parseVariants(variantsInput);
@@ -526,271 +608,126 @@ export default function ProductsPage() {
     <div className="admin-page">
       <AdminTopbar
         title="Products"
-        subtitle="Create, edit, and publish catalog items."
+        subtitle="Manage your catalog and inventory from one place."
+        actionLabel="Add product"
+        onAction={() => {
+          resetForm();
+          setShowForm(true);
+        }}
       />
 
-      {error ? <div className="admin-error">{error}</div> : null}
+      <div className="admin-products-toolbar">
+        <div className="admin-products-actions">
+          <button className="admin-products-action" type="button">Export</button>
+          <button className="admin-products-action" type="button">Import</button>
+          <button className="admin-products-action" type="button">More actions</button>
+        </div>
+        <div className="admin-products-search">
+          <input
+            type="search"
+            placeholder="Search products"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+          />
+        </div>
+      </div>
 
-      <section className="admin-grid admin-split">
-        <div className="admin-card admin-section">
-          <div className="admin-section-header">
-            <h3>{editingId ? "Edit product" : "New product"}</h3>
-            <span>{editingId ? "Updating" : "Add to catalog"}</span>
-          </div>
-          <form className="admin-form" onSubmit={handleSubmit}>
-            <div className="admin-row">
-              <label className="admin-field">
-                <span>Name</span>
-                <input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Banarasi silk kurta"
-                  required
-                />
-              </label>
-              <label className="admin-field">
-                <span>SKU</span>
-                <input
-                  value={sku}
-                  onChange={(event) => setSku(event.target.value)}
-                  placeholder="VST-1001"
-                />
-              </label>
-            </div>
-            <label className="admin-field">
-              <span>Description</span>
-              <textarea
-                rows="3"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="Short product description"
-              />
-            </label>
-            <div className="admin-row">
-              <label className="admin-field">
-                <span>Price</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={price}
-                  onChange={(event) => setPrice(event.target.value)}
-                  required
-                />
-              </label>
-              <label className="admin-field">
-                <span>Inventory</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={inventory}
-                  onChange={(event) => setInventory(event.target.value)}
-                />
-              </label>
-            </div>
-            <div className="admin-row">
-              <div className="admin-field">
-                <span>Categories</span>
-                <div className="admin-row">
-                  <input
-                    value={customCategory}
-                    onChange={(event) => setCustomCategory(event.target.value)}
-                    placeholder="Type a category name"
-                  />
-                  <button className="admin-secondary" type="button" onClick={addCustomCategory}>
-                    Add
-                  </button>
-                </div>
-                {categoryOptions.length > 0 ? (
-                  <div className="admin-row">
-                    {categoryOptions.map((name) => (
-                      <label className="admin-field" key={name}>
-                        <input
-                          type="checkbox"
-                          checked={selectedCategories.includes(name)}
-                          onChange={() => toggleCategory(name)}
-                        />
-                        <span>{name}</span>
-                      </label>
-                    ))}
-                  </div>
-                ) : null}
-                {selectedCategories.length > 0 ? (
-                  <div className="admin-row">
-                    {selectedCategories.map((name) => (
-                      <button
-                        className="admin-pill"
-                        type="button"
-                        key={name}
-                        onClick={() => toggleCategory(name)}
-                      >
-                        {name}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="admin-empty">No categories selected.</div>
-                )}
-                {categoriesLoading ? (
-                  <div className="admin-empty">Loading categories...</div>
-                ) : categoriesError ? (
-                  <div className="admin-error">{categoriesError}</div>
-                ) : categories.length === 0 ? (
-                  <div className="admin-empty">No categories yet.</div>
-                ) : null}
-              </div>
-              <label className="admin-field">
-                <span>Status</span>
-                <select value={status} onChange={(event) => setStatus(event.target.value)}>
-                  <option value="active">Active</option>
-                  <option value="draft">Draft</option>
-                  <option value="archived">Archived</option>
-                </select>
-              </label>
-            </div>
-            <label className="admin-field">
-              <span>Image URLs (comma separated)</span>
-              <input
-                value={images}
-                onChange={(event) => setImages(event.target.value)}
-                placeholder="https://..."
-              />
-            </label>
-            <label className="admin-field">
-              <span>Multiple colors?</span>
-              <select
-                value={hasVariants ? "yes" : "no"}
-                onChange={(event) => setHasVariants(event.target.value === "yes")}
-              >
-                <option value="no">No (single product)</option>
-                <option value="yes">Yes (color variants)</option>
-              </select>
-            </label>
-            <label className="admin-field">
-              <span>Upload images</span>
-              <input type="file" accept="image/*" multiple onChange={handleUpload} />
-            </label>
-            <label className="admin-field">
-              <span>Attach uploads to color</span>
-              <select
-                value={uploadColor}
-                onChange={(event) => {
-                  setUploadColor(event.target.value);
-                  setUploadColorTouched(true);
-                }}
-                disabled={!hasVariants}
-              >
-                <option value="">All colors (global images)</option>
-                {colorNames.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {uploading ? <div className="admin-empty">Uploading...</div> : null}
-            {uploadError ? <div className="admin-error">{uploadError}</div> : null}
-            <label className="admin-field">
-              <span>Tags (comma separated)</span>
-              <input
-                value={tags}
-                onChange={(event) => setTags(event.target.value)}
-                placeholder="silk, festive"
-              />
-            </label>
-            <label className="admin-field">
-              <span>Sizes (comma or line separated)</span>
-              <input
-                value={sizesInput}
-                onChange={(event) => setSizesInput(event.target.value)}
-                placeholder="S=10, M=5, L=0"
-                disabled={hasVariants}
-              />
-              {hasVariants ? (
-                <div className="admin-empty">Sizes are managed inside variants when colors are enabled.</div>
-              ) : null}
-            </label>
-            <label className="admin-field">
-              <span>Variants (one color per line)</span>
-              <textarea
-                rows="3"
-                value={variantsInput}
-                onChange={(event) => setVariantsInput(event.target.value)}
-                placeholder={`Red: S=5, M=3\nBlue: S=2, M=0`}
-                disabled={!hasVariants}
-              />
-            </label>
-            <label className="admin-field">
-              <span>Color images (one color per line)</span>
-              <textarea
-                rows="3"
-                value={colorImagesInput}
-                onChange={(event) => setColorImagesInput(event.target.value)}
-                placeholder={`Black: https://.../black1.jpg, https://.../black2.jpg\nYellow: https://.../yellow1.jpg`}
-                disabled={!hasVariants}
-              />
-            </label>
-            <label className="admin-field">
-              <span>Color descriptions (one color per line)</span>
-              <textarea
-                rows="3"
-                value={colorDescriptionsInput}
-                onChange={(event) => setColorDescriptionsInput(event.target.value)}
-                placeholder={`Black: Classic black print\nYellow: Bright summer edit`}
-                disabled={!hasVariants}
-              />
-            </label>
-            <label className="admin-field">
-              <span>Upload color images (uses selected color)</span>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleColorUpload}
-                disabled={!hasVariants}
-              />
-            </label>
-            <label className="admin-field">
-              <span>Upload color images (uses selected color)</span>
-              <input type="file" accept="image/*" multiple onChange={handleColorUpload} />
-            </label>
-            {formError ? <div className="admin-error">{formError}</div> : null}
-            <div className="admin-actions">
-              <button className="admin-action" type="submit" disabled={saving}>
-                {saving ? "Saving..." : editingId ? "Update product" : "Create product"}
-              </button>
-              <button className="admin-secondary" type="button" onClick={resetForm}>
-                Reset
-              </button>
-            </div>
-          </form>
+      <section className="admin-products-metrics">
+        <div className="admin-metric-card">
+          <div className="admin-metric-label">Average sell-through rate</div>
+          <div className="admin-metric-value">2.45%</div>
+          <div className="admin-metric-sub">Last 30 days</div>
+        </div>
+        <div className="admin-metric-card">
+          <div className="admin-metric-label">Products by days of inventory remaining</div>
+          <div className="admin-metric-value">No data</div>
+          <div className="admin-metric-sub">Connect sales to unlock insights.</div>
+        </div>
+        <div className="admin-metric-card">
+          <div className="admin-metric-label">ABC product analysis</div>
+          <div className="admin-metric-value">₹0.00</div>
+          <div className="admin-metric-sub">A ₹0.00 · B ₹0.00 · C ₹0.00</div>
+        </div>
+      </section>
+
+      <section className="admin-products-card">
+        <div className="admin-products-tabs">
+          {[
+            { id: "all", label: "All", count: statusCounts.all },
+            { id: "active", label: "Active", count: statusCounts.active },
+            { id: "draft", label: "Draft", count: statusCounts.draft },
+            { id: "archived", label: "Archived", count: statusCounts.archived },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              className={`admin-products-tab ${activeTab === tab.id ? "active" : ""}`}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+              <span>{tab.count}</span>
+            </button>
+          ))}
         </div>
 
-        <div className="admin-card admin-section">
-          <div className="admin-section-header">
-            <h3>Catalog</h3>
-            <span>{loading ? "Loading" : totalsLabel}</span>
+        {error ? <div className="admin-error">{error}</div> : null}
+
+        <div className="admin-products-table">
+          <div className="admin-products-row admin-products-head">
+            <div className="admin-products-checkbox">
+              <input type="checkbox" aria-label="Select all products" />
+            </div>
+            <div>Product</div>
+            <div>Status</div>
+            <div>Inventory</div>
+            <div>Category</div>
+            <div>Channels</div>
+            <div className="admin-products-actions-col">Actions</div>
           </div>
+
           {loading ? (
-            <div className="admin-empty">Loading products...</div>
-          ) : products.length === 0 ? (
-            <div className="admin-empty">No products yet.</div>
+            <div className="admin-products-empty">Loading products...</div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="admin-products-empty">No products found.</div>
           ) : (
-            <div className="admin-table">
-              <div className="admin-table-row admin-table-head cols-5">
-                <div>Product</div>
-                <div>Price</div>
-                <div>Inventory</div>
-                <div>Status</div>
-                <div>Actions</div>
-              </div>
-              {products.map((product) => (
-                <div className="admin-table-row cols-5" key={product.id}>
-                  <div>{product.name}</div>
-                  <div>{formatCurrency(product.price)}</div>
-                  <div>{product.inventory ?? 0}</div>
-                  <div className="admin-pill admin-pill-good">{product.status || "active"}</div>
-                  <div className="admin-table-actions">
+            filteredProducts.map((product) => {
+              const imageUrl = getPrimaryImage(product);
+              const inventoryInfo = getInventoryInfo(product);
+              const primaryCategory = product?.category || (product?.categories || [])[0] || "-";
+              const statusValue = (product?.status || "active").toLowerCase();
+              return (
+                <div className="admin-products-row" key={product.id}>
+                  <div className="admin-products-checkbox">
+                    <input type="checkbox" aria-label={`Select ${product.name}`} />
+                  </div>
+                  <div className="admin-product-cell">
+                    <div className="admin-product-media">
+                      <div className="admin-product-thumb">
+                        {imageUrl ? (
+                          <img src={imageUrl} alt={product.name || "Product"} />
+                        ) : (
+                          <span>No image</span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="admin-product-name">{product.name || "Untitled product"}</div>
+                        <div className="admin-product-sub">{product.sku || "No SKU"}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <span className={`admin-status ${getStatusTone(statusValue)}`}>
+                      {statusValue}
+                    </span>
+                  </div>
+                  <div>
+                    <div className={`admin-products-inventory ${inventoryInfo.count <= 0 ? "is-low" : ""}`}>
+                      {inventoryInfo.label}
+                    </div>
+                  </div>
+                  <div className="admin-products-category">{primaryCategory}</div>
+                  <div className="admin-products-channels">3</div>
+                  <div className="admin-products-actions-col">
                     <button className="admin-link" onClick={() => handleEdit(product)}>
                       Edit
                     </button>
@@ -802,11 +739,263 @@ export default function ProductsPage() {
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })
           )}
         </div>
       </section>
+      {showForm ? (
+        <div className="admin-modal" role="dialog" aria-modal="true">
+          <div className="admin-modal-card">
+            <div className="admin-modal-header">
+              <div>
+                <h3>{editingId ? "Edit product" : "New product"}</h3>
+                <p>{editingId ? "Update details and save." : "Add a new product to your catalog."}</p>
+              </div>
+              <button
+                className="admin-link"
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  resetForm();
+                }}
+              >
+                Close
+              </button>
+            </div>
+            <form className="admin-form" onSubmit={handleSubmit}>
+              <div className="admin-row">
+                <label className="admin-field">
+                  <span>Name</span>
+                  <input
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder="Banarasi silk kurta"
+                    required
+                  />
+                </label>
+                <label className="admin-field">
+                  <span>SKU</span>
+                  <input
+                    value={sku}
+                    onChange={(event) => setSku(event.target.value)}
+                    placeholder="VST-1001"
+                  />
+                </label>
+              </div>
+              <label className="admin-field">
+                <span>Description</span>
+                <textarea
+                  rows="3"
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  placeholder="Short product description"
+                />
+              </label>
+              <div className="admin-row">
+                <label className="admin-field">
+                  <span>Price</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={price}
+                    onChange={(event) => setPrice(event.target.value)}
+                    required
+                  />
+                </label>
+                <label className="admin-field">
+                  <span>Inventory</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={inventory}
+                    onChange={(event) => setInventory(event.target.value)}
+                  />
+                </label>
+              </div>
+              <div className="admin-row">
+                <div className="admin-field">
+                  <span>Categories</span>
+                  <div className="admin-row">
+                    <input
+                      value={customCategory}
+                      onChange={(event) => setCustomCategory(event.target.value)}
+                      placeholder="Type a category name"
+                    />
+                    <button className="admin-secondary" type="button" onClick={addCustomCategory}>
+                      Add
+                    </button>
+                  </div>
+                  {categoryOptions.length > 0 ? (
+                    <div className="admin-row">
+                      {categoryOptions.map((name) => (
+                        <label className="admin-field" key={name}>
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories.includes(name)}
+                            onChange={() => toggleCategory(name)}
+                          />
+                          <span>{name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                  {selectedCategories.length > 0 ? (
+                    <div className="admin-row">
+                      {selectedCategories.map((name) => (
+                        <button
+                          className="admin-pill"
+                          type="button"
+                          key={name}
+                          onClick={() => toggleCategory(name)}
+                        >
+                          {name}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="admin-empty">No categories selected.</div>
+                  )}
+                  {categoriesLoading ? (
+                    <div className="admin-empty">Loading categories...</div>
+                  ) : categoriesError ? (
+                    <div className="admin-error">{categoriesError}</div>
+                  ) : categories.length === 0 ? (
+                    <div className="admin-empty">No categories yet.</div>
+                  ) : null}
+                </div>
+                <label className="admin-field">
+                  <span>Status</span>
+                  <select value={status} onChange={(event) => setStatus(event.target.value)}>
+                    <option value="active">Active</option>
+                    <option value="draft">Draft</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </label>
+              </div>
+              <label className="admin-field">
+                <span>Image URLs (comma separated)</span>
+                <input
+                  value={images}
+                  onChange={(event) => setImages(event.target.value)}
+                  placeholder="https://..."
+                />
+              </label>
+              <label className="admin-field">
+                <span>Multiple colors?</span>
+                <select
+                  value={hasVariants ? "yes" : "no"}
+                  onChange={(event) => setHasVariants(event.target.value === "yes")}
+                >
+                  <option value="no">No (single product)</option>
+                  <option value="yes">Yes (color variants)</option>
+                </select>
+              </label>
+              <label className="admin-field">
+                <span>Upload images</span>
+                <input type="file" accept="image/*" multiple onChange={handleUpload} />
+              </label>
+              <label className="admin-field">
+                <span>Attach uploads to color</span>
+                <select
+                  value={uploadColor}
+                  onChange={(event) => {
+                    setUploadColor(event.target.value);
+                    setUploadColorTouched(true);
+                  }}
+                  disabled={!hasVariants}
+                >
+                  <option value="">All colors (global images)</option>
+                  {colorNames.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {uploading ? <div className="admin-empty">Uploading...</div> : null}
+              {uploadError ? <div className="admin-error">{uploadError}</div> : null}
+              <label className="admin-field">
+                <span>Tags (comma separated)</span>
+                <input
+                  value={tags}
+                  onChange={(event) => setTags(event.target.value)}
+                  placeholder="silk, festive"
+                />
+              </label>
+              <label className="admin-field">
+                <span>Sizes (comma or line separated)</span>
+                <input
+                  value={sizesInput}
+                  onChange={(event) => setSizesInput(event.target.value)}
+                  placeholder="S=10, M=5, L=0"
+                  disabled={hasVariants}
+                />
+                {hasVariants ? (
+                  <div className="admin-empty">Sizes are managed inside variants when colors are enabled.</div>
+                ) : null}
+              </label>
+              <label className="admin-field">
+                <span>Variants (one color per line)</span>
+                <textarea
+                  rows="3"
+                  value={variantsInput}
+                  onChange={(event) => setVariantsInput(event.target.value)}
+                  placeholder={`Red: S=5, M=3\nBlue: S=2, M=0`}
+                  disabled={!hasVariants}
+                />
+              </label>
+              <label className="admin-field">
+                <span>Color images (one color per line)</span>
+                <textarea
+                  rows="3"
+                  value={colorImagesInput}
+                  onChange={(event) => setColorImagesInput(event.target.value)}
+                  placeholder={`Black: https://.../black1.jpg, https://.../black2.jpg\nYellow: https://.../yellow1.jpg`}
+                  disabled={!hasVariants}
+                />
+              </label>
+              <label className="admin-field">
+                <span>Color descriptions (one color per line)</span>
+                <textarea
+                  rows="3"
+                  value={colorDescriptionsInput}
+                  onChange={(event) => setColorDescriptionsInput(event.target.value)}
+                  placeholder={`Black: Classic black print\nYellow: Bright summer edit`}
+                  disabled={!hasVariants}
+                />
+              </label>
+              <label className="admin-field">
+                <span>Upload color images (uses selected color)</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleColorUpload}
+                  disabled={!hasVariants}
+                />
+              </label>
+              {formError ? <div className="admin-error">{formError}</div> : null}
+              <div className="admin-actions">
+                <button className="admin-action" type="submit" disabled={saving}>
+                  {saving ? "Saving..." : editingId ? "Update product" : "Create product"}
+                </button>
+                <button
+                  className="admin-secondary"
+                  type="button"
+                  onClick={() => {
+                    resetForm();
+                    setShowForm(false);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
