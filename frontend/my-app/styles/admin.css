@@ -214,6 +214,10 @@ body:has(.admin-login) footer {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
+.admin-stack {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .admin-card {
   background: var(--admin-panel);
   border: 1px solid var(--admin-border);
@@ -255,6 +259,179 @@ body:has(.admin-login) footer {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.admin-orders-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.admin-orders-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--admin-border);
+  background: #fbf9f5;
+}
+
+.admin-orders-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-orders-tab {
+  border: 1px solid transparent;
+  background: #ede7df;
+  color: var(--admin-ink);
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-orders-tab.active {
+  background: #fff;
+  border-color: var(--admin-border);
+  box-shadow: 0 6px 14px rgba(33, 28, 22, 0.08);
+}
+
+.admin-orders-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-search input {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: #fff;
+  font-size: 13px;
+  min-width: 240px;
+}
+
+.admin-orders-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  font-size: 13px;
+  color: var(--admin-muted);
+  border-bottom: 1px solid var(--admin-border);
+  background: #fff;
+}
+
+.admin-orders-table {
+  width: 100%;
+  overflow-x: auto;
+  background: #fff;
+}
+
+.admin-orders-row {
+  display: grid;
+  grid-template-columns: 36px 110px 160px 220px 140px 110px 150px 170px 90px 160px 150px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--admin-border);
+  min-width: 1280px;
+}
+
+.admin-orders-row:hover {
+  background: #fbf9f5;
+}
+
+.admin-orders-head {
+  background: #f7f3ee;
+  color: var(--admin-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.admin-orders-checkbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-orders-id {
+  font-weight: 600;
+}
+
+.admin-orders-customer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-strong {
+  font-weight: 600;
+}
+
+.admin-subtext {
+  font-size: 12px;
+  color: var(--admin-muted);
+}
+
+.admin-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  width: fit-content;
+  text-transform: capitalize;
+}
+
+.admin-status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.admin-status-good {
+  background: var(--admin-accent-soft);
+  color: var(--admin-accent);
+}
+
+.admin-status-warn {
+  background: var(--admin-warning-soft);
+  color: var(--admin-warning);
+}
+
+.admin-status-bad {
+  background: var(--admin-danger-soft);
+  color: var(--admin-danger);
+}
+
+.admin-status-info {
+  background: var(--admin-info-soft);
+  color: var(--admin-info);
+}
+
+.admin-status-neutral {
+  background: #eee7de;
+  color: #5b544c;
+}
+
+.admin-orders-row-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .admin-table-row {
@@ -395,6 +572,23 @@ body:has(.admin-login) footer {
   .admin-table-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .admin-orders-toolbar {
+    align-items: flex-start;
+  }
+
+  .admin-orders-actions {
+    width: 100%;
+  }
+
+  .admin-search {
+    width: 100%;
+  }
+
+  .admin-search input {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 .admin-form {
@@ -438,6 +632,22 @@ body:has(.admin-login) footer {
   display: flex;
   gap: 12px;
   align-items: center;
+}
+
+.admin-muted {
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
 }
 
 .admin-link {
