@@ -8,6 +8,7 @@ from ..auth import get_current_user
 from ..db import get_db
 from ..utils import serialize_doc, to_object_id
 from ..services.order_email_service import send_admin_order_email, send_order_email
+from ..services.delhivery_service import create_delhivery_order_for_order
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -69,6 +70,13 @@ async def create_order(payload: OrderCreate):
     result = await db.orders.insert_one(doc)
     created = await db.orders.find_one({"_id": result.inserted_id})
     if created:
+        delhivery_info = await create_delhivery_order_for_order(db, created)
+        if delhivery_info:
+            await db.orders.update_one(
+                {"_id": created["_id"]},
+                {"$set": {"delhivery": delhivery_info, "updated_at": datetime.utcnow()}},
+            )
+            created = await db.orders.find_one({"_id": created["_id"]})
         await send_order_email(
             db,
             created,
