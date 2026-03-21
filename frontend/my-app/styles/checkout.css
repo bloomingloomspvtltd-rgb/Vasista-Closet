@@ -153,6 +153,54 @@
   font-weight: 600;
 }
 
+.checkout-payment {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #efe7df;
+  border-radius: 12px;
+  background: #fffaf5;
+}
+
+.checkout-payment h3 {
+  margin: 0;
+}
+
+.checkout-payment-options {
+  display: grid;
+  gap: 8px;
+}
+
+.checkout-payment-option {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e7ddd6;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.checkout-payment-option input {
+  accent-color: #e91e63;
+}
+
+.checkout-payment-note {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #5a3b2a;
+}
+
+.checkout-payment-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0 4px;
+  border-top: 1px dashed #eee7df;
+  font-weight: 600;
+}
+
 .admin-success {
   background: #e7f4ea;
   color: #1f6b3a;

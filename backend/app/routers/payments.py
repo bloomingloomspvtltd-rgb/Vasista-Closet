@@ -103,6 +103,7 @@ async def create_razorpay_order(payload: RazorpayOrderCreate):
         "discount_id": payload.discount_id,
         "discount_amount": payload.discount_amount,
         "total": payload.total,
+        "payment_method": "razorpay",
         "payment_provider": "razorpay",
         "payment_status": "created",
         "created_at": now,

@@ -6,6 +6,7 @@ import { useCart } from "@/lib/CartContext";
 import { getCustomerSession, setCustomerSession } from "@/lib/customerSession";
 import {
   createCustomer,
+  createOrder,
   createRazorpayOrder,
   updateCustomerProfile,
   listPublicCoupons,
@@ -54,6 +55,7 @@ export default function CheckoutPage() {
   const [couponError, setCouponError] = useState("");
   const [availableCoupons, setAvailableCoupons] = useState([]);
   const [autoApplied, setAutoApplied] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
 
   const loadRazorpay = () =>
     new Promise((resolve) => {
@@ -247,6 +249,19 @@ export default function CheckoutPage() {
         discount_amount: discountAmount,
         total,
       };
+
+      if (paymentMethod === "cod") {
+        await createOrder({
+          ...orderPayload,
+          payment_method: "cod",
+          payment_provider: "cod",
+          payment_status: "pending",
+        });
+        clearCart();
+        setSuccess("Order placed with Cash on Delivery. We'll confirm your order shortly.");
+        setForm(emptyForm);
+        return;
+      }
 
       const razorpayOrder = await createRazorpayOrder(orderPayload);
 
@@ -494,8 +509,44 @@ export default function CheckoutPage() {
             {clientError ? <div className="admin-error">{clientError}</div> : null}
             {error ? <div className="admin-error">{error}</div> : null}
             {success ? <div className="admin-success">{success}</div> : null}
+            <div className="checkout-payment">
+              <h3>Payment method</h3>
+              <div className="checkout-payment-options">
+                <label className="checkout-payment-option">
+                  <input
+                    type="radio"
+                    name="payment_method"
+                    value="razorpay"
+                    checked={paymentMethod === "razorpay"}
+                    onChange={() => setPaymentMethod("razorpay")}
+                  />
+                  <span>Pay online (Razorpay)</span>
+                </label>
+                <label className="checkout-payment-option">
+                  <input
+                    type="radio"
+                    name="payment_method"
+                    value="cod"
+                    checked={paymentMethod === "cod"}
+                    onChange={() => setPaymentMethod("cod")}
+                  />
+                  <span>Cash on Delivery (COD)</span>
+                </label>
+              </div>
+              {paymentMethod === "cod" ? (
+                <p className="checkout-payment-note">
+                  Pay in cash when the order is delivered.
+                </p>
+              ) : null}
+            </div>
             <button className="add-to-cart-btn" type="submit" disabled={loading}>
-              {loading ? "Opening payment..." : "Pay now"}
+              {loading
+                ? paymentMethod === "cod"
+                  ? "Placing order..."
+                  : "Opening payment..."
+                : paymentMethod === "cod"
+                ? "Place order (COD)"
+                : "Pay now"}
             </button>
           </form>
 
@@ -512,6 +563,10 @@ export default function CheckoutPage() {
                 </li>
               ))}
             </ul>
+            <div className="checkout-payment-summary">
+              <span>Payment method</span>
+              <strong>{paymentMethod === "cod" ? "Cash on Delivery" : "Razorpay (Online)"}</strong>
+            </div>
 
               <div className="checkout-coupon">
                 <h3>Apply coupon</h3>

@@ -27,6 +27,9 @@ class OrderBase(BaseModel):
     discount_id: Optional[str] = None
     discount_amount: float = Field(default=0, ge=0)
     total: float = Field(ge=0)
+    payment_method: Optional[str] = None
+    payment_provider: Optional[str] = None
+    payment_status: Optional[str] = None
 
 
 class OrderCreate(OrderBase):
@@ -41,6 +44,9 @@ class OrderUpdate(BaseModel):
     discount_id: Optional[str] = None
     discount_amount: Optional[float] = Field(default=None, ge=0)
     total: Optional[float] = Field(default=None, ge=0)
+    payment_method: Optional[str] = None
+    payment_provider: Optional[str] = None
+    payment_status: Optional[str] = None
 
 
 @router.get("", dependencies=[Depends(get_current_user)])
@@ -57,6 +63,9 @@ async def create_order(payload: OrderCreate):
     now = datetime.utcnow()
     doc["created_at"] = now
     doc["updated_at"] = now
+    doc["payment_method"] = "cod"
+    doc["payment_provider"] = "cod"
+    doc["payment_status"] = "pending"
     result = await db.orders.insert_one(doc)
     created = await db.orders.find_one({"_id": result.inserted_id})
     if created:

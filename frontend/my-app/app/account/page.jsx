@@ -15,6 +15,13 @@ function isProfileIncomplete(customer) {
   return false;
 }
 
+function formatPaymentMethod(order) {
+  const raw = (order.payment_method || order.payment_provider || "").toLowerCase();
+  if (raw === "cod") return "Cash on Delivery";
+  if (raw === "razorpay") return "Razorpay (Online)";
+  return raw ? raw.replace(/_/g, " ").toUpperCase() : "Online";
+}
+
 export default function AccountPage() {
   const [customer, setCustomer] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -326,6 +333,7 @@ export default function AccountPage() {
                   <div>
                     <span>Items: {order.items?.length || 0}</span>
                     <span>Total: Rs. {order.total}</span>
+                    <span>Method: {formatPaymentMethod(order)}</span>
                     <span>Payment: {order.payment_status || "pending"}</span>
                     {order.razorpay_payment_id ? (
                       <span>Payment ID: {order.razorpay_payment_id}</span>
