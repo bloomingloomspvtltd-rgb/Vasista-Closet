@@ -5,12 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getFeaturedCategories } from "@/lib/categoryData";
+import { useCart } from "@/lib/CartContext";
 
 export default function Navbar() {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMobileDropdown, setOpenMobileDropdown] = useState(null);
   const [searchValue, setSearchValue] = useState("");
+  const { getTotalItems } = useCart();
+  const totalItems = getTotalItems();
   const featured = getFeaturedCategories();
   const featuredMap = featured.reduce((acc, item) => {
     acc[item.slug] = item;
@@ -130,10 +133,15 @@ export default function Navbar() {
             </svg>
           </Link>
 
-          <Link href="/cart" aria-label="Cart">
+          <Link href="/cart" aria-label="Cart" className="nav-icon-link cart-icon-link">
             <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4l1-12z" />
             </svg>
+            {totalItems > 0 ? (
+              <span className="cart-count" aria-label={`${totalItems} items in cart`}>
+                {totalItems}
+              </span>
+            ) : null}
           </Link>
 
         </div>

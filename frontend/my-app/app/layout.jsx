@@ -19,9 +19,11 @@ import "../styles/wishlist.css";
 import "../styles/admin.css";
 import "../styles/order-tracking.css";
 import "../styles/about.css";
+import "../styles/toast.css";
 
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
+import CartToast from "../components/layout/CartToast";
 import { CartProvider } from "../lib/CartContext";
 import { WishlistProvider } from "../lib/WishlistContext";
 
@@ -39,6 +41,7 @@ export default function RootLayout({ children }) {
           <WishlistProvider>
             <Navbar />
             <main>{children}</main>
+            <CartToast />
             <Footer />
           </WishlistProvider>
         </CartProvider>

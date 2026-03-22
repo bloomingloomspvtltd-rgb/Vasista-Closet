@@ -1,11 +1,13 @@
 'use client';
 
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect, useRef } from 'react';
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
+  const [toast, setToast] = useState(null);
+  const toastTimerRef = useRef(null);
 
   useEffect(() => {
     try {
@@ -42,6 +44,9 @@ export function CartProvider({ children }) {
 
       return [...prev, { ...product, quantity, color: selectedColor, size: selectedSize }];
     });
+
+    const name = product && product.name ? product.name : 'Item';
+    setToast({ message: `${name} added to cart`, id: Date.now() });
   };
 
   const removeFromCart = (productId, color, size) => {
@@ -77,9 +82,27 @@ export function CartProvider({ children }) {
     return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   };
 
+  useEffect(() => {
+    if (!toast) return;
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, 2000);
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = null;
+      }
+    };
+  }, [toast]);
+
   return (
     <CartContext.Provider value={{
       cartItems,
+      toast,
       addToCart,
       removeFromCart,
       updateQuantity,
