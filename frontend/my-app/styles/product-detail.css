@@ -45,6 +45,7 @@
   position: relative;
   border-radius: 12px;
   overflow: hidden;
+  touch-action: pan-y;
 }
 
 .product-hero-image img {
@@ -77,6 +78,20 @@
 .hero-icon svg {
   width: 18px;
   height: 18px;
+}
+
+.swipe-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.8);
+  color: #1a1a1a;
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+  display: none;
 }
 
 .product-panel {
@@ -453,7 +468,11 @@
   }
 
   .product-thumbs {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: none;
+  }
+
+  .swipe-hint {
+    display: inline-flex;
   }
 
   .assurance-row {

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getProduct } from "@/lib/storeApi";
@@ -68,6 +68,8 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [openAccordion, setOpenAccordion] = useState("details");
   const [showSizeChart, setShowSizeChart] = useState(false);
+  const swipeStartRef = useRef({ x: 0, y: 0 });
+  const swipeLastRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!params?.id) return;
@@ -277,8 +279,37 @@ export default function ProductDetailPage() {
               event.currentTarget.style.setProperty("--zoom-x", "50%");
               event.currentTarget.style.setProperty("--zoom-y", "50%");
             }}
+            onTouchStart={(event) => {
+              const touch = event.touches[0];
+              swipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+              swipeLastRef.current = { x: touch.clientX, y: touch.clientY };
+            }}
+            onTouchMove={(event) => {
+              const touch = event.touches[0];
+              swipeLastRef.current = { x: touch.clientX, y: touch.clientY };
+            }}
+            onTouchEnd={() => {
+              if (images.length <= 1) return;
+              const start = swipeStartRef.current;
+              const end = swipeLastRef.current;
+              const deltaX = end.x - start.x;
+              const deltaY = end.y - start.y;
+              if (Math.abs(deltaX) < 40 || Math.abs(deltaX) < Math.abs(deltaY)) {
+                return;
+              }
+              if (deltaX < 0) {
+                setActiveImage((current) => (current + 1) % images.length);
+              } else {
+                setActiveImage((current) => (current - 1 + images.length) % images.length);
+              }
+            }}
           >
             <img src={images[activeImage]} alt={displayName} />
+            {images.length > 1 ? (
+              <div className="swipe-hint" aria-hidden="true">
+                Swipe to view
+              </div>
+            ) : null}
             <button className="hero-icon" type="button" aria-label="Share">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path
