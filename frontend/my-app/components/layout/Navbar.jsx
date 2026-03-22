@@ -65,7 +65,7 @@ export default function Navbar() {
 
       {/* TOP ANNOUNCEMENT BAR */}
       <div className="topbar">
-        NEW ARRIVALS | BUY 2 GET 25% OFF
+        NEW ARRIVALS | BUY 2 GET 15% OFF
       </div>
 
       {/* MAIN HEADER ROW */}
