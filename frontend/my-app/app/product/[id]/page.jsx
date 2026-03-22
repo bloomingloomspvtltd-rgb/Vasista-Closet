@@ -68,6 +68,8 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [openAccordion, setOpenAccordion] = useState("details");
   const [showSizeChart, setShowSizeChart] = useState(false);
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const swipeStartRef = useRef({ x: 0, y: 0 });
   const swipeLastRef = useRef({ x: 0, y: 0 });
 
@@ -165,6 +167,15 @@ export default function ProductDetailPage() {
       setSelectedSize(sizeOptions[0]);
     }
   }, [sizeOptions, selectedSize]);
+
+  useEffect(() => {
+    const updateIsMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    updateIsMobile();
+    window.addEventListener("resize", updateIsMobile);
+    return () => window.removeEventListener("resize", updateIsMobile);
+  }, []);
 
   const sizeCounts = useMemo(() => {
     const variants = product?.variants;
@@ -278,6 +289,9 @@ export default function ProductDetailPage() {
             onMouseLeave={(event) => {
               event.currentTarget.style.setProperty("--zoom-x", "50%");
               event.currentTarget.style.setProperty("--zoom-y", "50%");
+            }}
+            onClick={() => {
+              if (isMobile) setShowImageViewer(true);
             }}
             onTouchStart={(event) => {
               const touch = event.touches[0];
@@ -624,6 +638,32 @@ export default function ProductDetailPage() {
             type="button"
             aria-label="Close size chart"
             onClick={() => setShowSizeChart(false)}
+          />
+        </div>
+      ) : null}
+
+      {showImageViewer ? (
+        <div className="image-viewer-overlay" role="dialog" aria-modal="true">
+          <div className="image-viewer-modal">
+            <button
+              className="image-viewer-close"
+              type="button"
+              aria-label="Close image"
+              onClick={() => setShowImageViewer(false)}
+            >
+              ×
+            </button>
+            <img
+              className="image-viewer-image"
+              src={images[activeImage]}
+              alt={displayName}
+            />
+          </div>
+          <button
+            className="image-viewer-backdrop"
+            type="button"
+            aria-label="Close image"
+            onClick={() => setShowImageViewer(false)}
           />
         </div>
       ) : null}
