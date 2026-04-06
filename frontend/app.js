@@ -36,6 +36,18 @@ function getSessionId() {
   }
 }
 
+function getDeviceType() {
+  const ua = navigator.userAgent || "";
+  const lower = ua.toLowerCase();
+  if (/(ipad|tablet|kindle|silk|playbook|nexus 7|nexus 9|nexus 10)/.test(lower)) {
+    return "tablet";
+  }
+  if (/mobi|android|iphone|ipod|blackberry|iemobile|opera mini/.test(lower)) {
+    return "mobile";
+  }
+  return "desktop";
+}
+
 async function trackVisit() {
   try {
     const customer = getCustomerSession();
@@ -48,6 +60,7 @@ async function trackVisit() {
         path: window.location.pathname,
         referrer: document.referrer || null,
         user_agent: navigator.userAgent,
+        device_type: getDeviceType(),
       }),
     });
   } catch (err) {

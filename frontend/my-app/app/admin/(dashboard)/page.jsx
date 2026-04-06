@@ -28,6 +28,7 @@ export default function AdminHomePage() {
   const [analyticsSeries, setAnalyticsSeries] = useState([]);
   const [activeStats, setActiveStats] = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [rangeDays, setRangeDays] = useState(30);
 
   const loadAll = async () => {
     setLoading(true);
@@ -35,7 +36,7 @@ export default function AdminHomePage() {
     try {
       const now = new Date();
       const start = new Date(now);
-      start.setDate(start.getDate() - 30);
+      start.setDate(start.getDate() - rangeDays);
       const rangeStart = start.toISOString().slice(0, 10);
       const rangeEnd = now.toISOString().slice(0, 10);
       const timezone =
@@ -76,7 +77,7 @@ export default function AdminHomePage() {
 
   useEffect(() => {
     loadAll();
-  }, []);
+  }, [rangeDays]);
 
   useEffect(() => {
     let isMounted = true;
@@ -125,6 +126,10 @@ export default function AdminHomePage() {
   const activeSessions = activeStats?.active_sessions ?? 0;
   const activeMembers = activeStats?.active_members ?? 0;
   const totalVisits = analyticsSummary?.total_visits ?? 0;
+  const deviceSessions = analyticsSummary?.device_sessions || {};
+  const deviceMobile = deviceSessions.mobile ?? 0;
+  const deviceDesktop = deviceSessions.desktop ?? 0;
+  const deviceOther = (deviceSessions.other ?? 0) + (deviceSessions.tablet ?? 0);
   const memberVisits = analyticsSeries.reduce(
     (sum, item) => sum + Number(item?.unique_members || 0),
     0
@@ -191,15 +196,38 @@ export default function AdminHomePage() {
         <div className="admin-card admin-section">
           <div className="admin-section-header">
             <h3>Traffic snapshot</h3>
-            <span>{analyticsLoading ? "Loading" : "Last 30 days"}</span>
+            <div className="admin-filter">
+              <button
+                type="button"
+                className={`admin-filter-btn ${rangeDays === 30 ? "active" : ""}`}
+                onClick={() => setRangeDays(30)}
+              >
+                <span className="admin-filter-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="16" rx="3" ry="3" />
+                    <line x1="3" y1="9" x2="21" y2="9" />
+                    <line x1="8" y1="3" x2="8" y2="7" />
+                    <line x1="16" y1="3" x2="16" y2="7" />
+                  </svg>
+                </span>
+                30 days
+              </button>
+              <button
+                type="button"
+                className={`admin-filter-btn ${rangeDays === 7 ? "active" : ""}`}
+                onClick={() => setRangeDays(7)}
+              >
+                7 days
+              </button>
+            </div>
           </div>
           <div className="admin-traffic-metrics">
             <div>
-              <div className="admin-stat-label">Visits (30d)</div>
+              <div className="admin-stat-label">Visits</div>
               <div className="admin-stat-value">{analyticsLoading ? "..." : totalVisits}</div>
             </div>
             <div>
-              <div className="admin-stat-label">Member visits (30d)</div>
+              <div className="admin-stat-label">Member visits</div>
               <div className="admin-stat-value">
                 {analyticsLoading ? "..." : memberVisits}
               </div>
@@ -208,6 +236,24 @@ export default function AdminHomePage() {
               <div className="admin-stat-label">Visits today</div>
               <div className="admin-stat-value">{analyticsLoading ? "..." : todayVisits}</div>
             </div>
+          </div>
+          <div className="admin-device-breakdown">
+            <div className="admin-device-title">Sessions by Device Type</div>
+            {analyticsLoading ? (
+              <div className="admin-empty">Loading device data...</div>
+            ) : (
+              <div className="admin-device-row">
+                <span className="admin-device-pill">
+                  <strong>{deviceMobile}</strong> Mobile
+                </span>
+                <span className="admin-device-pill">
+                  <strong>{deviceDesktop}</strong> Desktop
+                </span>
+                <span className="admin-device-pill">
+                  <strong>{deviceOther}</strong> Other
+                </span>
+              </div>
+            )}
           </div>
           {analyticsLoading ? (
             <div className="admin-empty">Loading visits trend...</div>

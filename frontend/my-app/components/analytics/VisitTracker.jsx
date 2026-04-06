@@ -56,6 +56,7 @@ export default function VisitTracker() {
       path: pathname,
       referrer: typeof document !== "undefined" ? document.referrer || null : null,
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      device_type: getDeviceType(),
     };
 
     sendVisit(payload);
@@ -68,4 +69,16 @@ export default function VisitTracker() {
   }, [pathname, sessionId]);
 
   return null;
+}
+function getDeviceType() {
+  if (typeof window === "undefined") return "other";
+  const ua = navigator.userAgent || "";
+  const lower = ua.toLowerCase();
+  if (/(ipad|tablet|kindle|silk|playbook|nexus 7|nexus 9|nexus 10)/.test(lower)) {
+    return "tablet";
+  }
+  if (/mobi|android|iphone|ipod|blackberry|iemobile|opera mini/.test(lower)) {
+    return "mobile";
+  }
+  return "desktop";
 }

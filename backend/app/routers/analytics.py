@@ -17,6 +17,7 @@ class VisitPayload(BaseModel):
     path: Optional[str] = None
     referrer: Optional[str] = None
     user_agent: Optional[str] = None
+    device_type: Optional[str] = None
 
 
 def _utc_now() -> datetime:
@@ -43,6 +44,15 @@ def _active_window_minutes() -> int:
     return int(getattr(settings, "analytics_active_window_minutes", 5))
 
 
+def _normalize_device_type(value: Optional[str]) -> str:
+    if not value:
+        return "other"
+    cleaned = value.strip().lower()
+    if cleaned in {"mobile", "desktop", "tablet"}:
+        return cleaned
+    return "other"
+
+
 @router.post("/visit")
 async def record_visit(payload: VisitPayload, request: Request):
     db = get_db()
@@ -55,6 +65,7 @@ async def record_visit(payload: VisitPayload, request: Request):
         "path": payload.path,
         "referrer": payload.referrer,
         "user_agent": payload.user_agent,
+        "device_type": _normalize_device_type(payload.device_type),
         "ip": ip,
         "created_at": now,
     }
@@ -65,6 +76,7 @@ async def record_visit(payload: VisitPayload, request: Request):
         "member_id": payload.member_id,
         "path": payload.path,
         "user_agent": payload.user_agent,
+        "device_type": _normalize_device_type(payload.device_type),
         "ip": ip,
         "last_seen": now,
     }
@@ -127,6 +139,19 @@ async def get_summary(
     total_visits = await db.analytics_visits.count_documents(
         {"created_at": {"$gte": start_dt, "$lte": end_dt}}
     )
+    device_pipeline = [
+        {"$match": {"created_at": {"$gte": start_dt, "$lte": end_dt}}},
+        {
+            "$group": {
+                "_id": "$device_type",
+                "count": {"$sum": 1},
+            }
+        },
+    ]
+    device_counts = await db.analytics_visits.aggregate(device_pipeline).to_list(10)
+    device_summary = {"mobile": 0, "desktop": 0, "tablet": 0, "other": 0}
+    for row in device_counts:
+        device_summary[_normalize_device_type(row.get("_id"))] = row.get("count", 0)
 
     window_minutes = _active_window_minutes()
     cutoff = now - timedelta(minutes=window_minutes)
@@ -142,6 +167,7 @@ async def get_summary(
         "active_sessions": active_sessions,
         "active_members": active_members,
         "window_minutes": window_minutes,
+        "device_sessions": device_summary,
     }
 
 
