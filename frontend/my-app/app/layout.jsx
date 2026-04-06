@@ -26,6 +26,7 @@ import Footer from "../components/layout/Footer";
 import CartToast from "../components/layout/CartToast";
 import { CartProvider } from "../lib/CartContext";
 import { WishlistProvider } from "../lib/WishlistContext";
+import VisitTracker from "../components/analytics/VisitTracker";
 
 export const metadata = {
   title: "Visista | Modern Indian Ethnic Wear",
@@ -39,6 +40,7 @@ export default function RootLayout({ children }) {
       <body suppressHydrationWarning>
         <CartProvider>
           <WishlistProvider>
+            <VisitTracker />
             <Navbar />
             <main>{children}</main>
             <CartToast />

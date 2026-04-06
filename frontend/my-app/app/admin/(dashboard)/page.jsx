@@ -24,26 +24,51 @@ export default function AdminHomePage() {
   const [customers, setCustomers] = useState([]);
   const [discounts, setDiscounts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [analyticsSummary, setAnalyticsSummary] = useState(null);
+  const [analyticsSeries, setAnalyticsSeries] = useState([]);
+  const [activeStats, setActiveStats] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
   const loadAll = async () => {
     setLoading(true);
     setError("");
     try {
-      const [ordersData, productsData, customersData, discountsData, categoriesData] =
-        await Promise.all([
-          apiFetch("/orders"),
-          apiFetch("/products"),
-          apiFetch("/customers"),
-          apiFetch("/discounts"),
-          apiFetch("/categories"),
-        ]);
+      const now = new Date();
+      const start = new Date(now);
+      start.setDate(start.getDate() - 30);
+      const rangeStart = start.toISOString().slice(0, 10);
+      const rangeEnd = now.toISOString().slice(0, 10);
+      const timezone =
+        Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+      const [
+        ordersData,
+        productsData,
+        customersData,
+        discountsData,
+        categoriesData,
+        summaryData,
+        visitsData,
+      ] = await Promise.all([
+        apiFetch("/orders"),
+        apiFetch("/products"),
+        apiFetch("/customers"),
+        apiFetch("/discounts"),
+        apiFetch("/categories"),
+        apiFetch(`/analytics/summary?start=${rangeStart}&end=${rangeEnd}`),
+        apiFetch(`/analytics/visits?start=${rangeStart}&end=${rangeEnd}&tz=${timezone}`),
+      ]);
       setOrders(Array.isArray(ordersData) ? ordersData : []);
       setProducts(Array.isArray(productsData) ? productsData : []);
       setCustomers(Array.isArray(customersData) ? customersData : []);
       setDiscounts(Array.isArray(discountsData) ? discountsData : []);
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      setAnalyticsSummary(summaryData || null);
+      setAnalyticsSeries(Array.isArray(visitsData?.series) ? visitsData.series : []);
+      setAnalyticsLoading(false);
     } catch (err) {
       setError(err?.message || "Failed to load admin data.");
+      setAnalyticsLoading(false);
     } finally {
       setLoading(false);
     }
@@ -51,6 +76,24 @@ export default function AdminHomePage() {
 
   useEffect(() => {
     loadAll();
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadActive = async () => {
+      try {
+        const data = await apiFetch("/analytics/active");
+        if (isMounted) setActiveStats(data || null);
+      } catch (err) {
+        if (isMounted) setActiveStats(null);
+      }
+    };
+    loadActive();
+    const interval = setInterval(loadActive, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const handleSeed = async () => {
@@ -78,6 +121,22 @@ export default function AdminHomePage() {
   };
 
   const recentOrders = useMemo(() => orders.slice(0, 5), [orders]);
+  const activeWindow = activeStats?.window_minutes || 5;
+  const activeSessions = activeStats?.active_sessions ?? 0;
+  const activeMembers = activeStats?.active_members ?? 0;
+  const totalVisits = analyticsSummary?.total_visits ?? 0;
+  const memberVisits = analyticsSeries.reduce(
+    (sum, item) => sum + Number(item?.unique_members || 0),
+    0
+  );
+  const todayKey = useMemo(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    return new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
+  }, []);
+  const todayEntry = analyticsSeries.find((row) => row.date === todayKey);
+  const todayVisits = todayEntry?.visits ?? 0;
+  const lastSevenDays = analyticsSeries.slice(-7);
+  const maxVisits = Math.max(1, ...lastSevenDays.map((row) => row.visits || 0));
 
   return (
     <div className="admin-page">
@@ -112,9 +171,67 @@ export default function AdminHomePage() {
           <div className="admin-stat-value">{loading ? "..." : discounts.length}</div>
           <div className="admin-stat-trend">Promotions running</div>
         </div>
+        <div className="admin-card">
+          <div className="admin-stat-label">Active visitors</div>
+          <div className="admin-stat-value">
+            {analyticsLoading ? "..." : activeSessions}
+          </div>
+          <div className="admin-stat-trend">{`In last ${activeWindow} minutes`}</div>
+        </div>
+        <div className="admin-card">
+          <div className="admin-stat-label">Active members</div>
+          <div className="admin-stat-value">
+            {analyticsLoading ? "..." : activeMembers}
+          </div>
+          <div className="admin-stat-trend">Logged-in visitors</div>
+        </div>
       </section>
 
-      <section className="admin-grid">
+      <section className="admin-grid admin-split">
+        <div className="admin-card admin-section">
+          <div className="admin-section-header">
+            <h3>Traffic snapshot</h3>
+            <span>{analyticsLoading ? "Loading" : "Last 30 days"}</span>
+          </div>
+          <div className="admin-traffic-metrics">
+            <div>
+              <div className="admin-stat-label">Visits (30d)</div>
+              <div className="admin-stat-value">{analyticsLoading ? "..." : totalVisits}</div>
+            </div>
+            <div>
+              <div className="admin-stat-label">Member visits (30d)</div>
+              <div className="admin-stat-value">
+                {analyticsLoading ? "..." : memberVisits}
+              </div>
+            </div>
+            <div>
+              <div className="admin-stat-label">Visits today</div>
+              <div className="admin-stat-value">{analyticsLoading ? "..." : todayVisits}</div>
+            </div>
+          </div>
+          {analyticsLoading ? (
+            <div className="admin-empty">Loading visits trend...</div>
+          ) : lastSevenDays.length === 0 ? (
+            <div className="admin-empty">No visit data yet.</div>
+          ) : (
+            <div className="admin-chart">
+              {lastSevenDays.map((row) => (
+                <div className="admin-chart-row" key={row.date}>
+                  <span className="admin-chart-label">{row.date.slice(5)}</span>
+                  <div className="admin-chart-bar">
+                    <span
+                      style={{
+                        width: `${Math.max(6, Math.round((row.visits / maxVisits) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="admin-chart-value">{row.visits}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="admin-card admin-section">
           <div className="admin-section-header">
             <h3>Recent orders</h3>

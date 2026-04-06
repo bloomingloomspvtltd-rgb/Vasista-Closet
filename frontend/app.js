@@ -8,6 +8,52 @@ const mainImageEl = document.getElementById("main-image");
 
 let products = [];
 let activeId = null;
+let analyticsTimer = null;
+
+const SESSION_KEY = "visista_session_id";
+const ANALYTICS_HEARTBEAT_MS = 30000;
+
+function getCustomerSession() {
+  try {
+    const raw = window.localStorage.getItem("visista_customer");
+    return raw ? JSON.parse(raw) : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function getSessionId() {
+  try {
+    const existing = window.localStorage.getItem(SESSION_KEY);
+    if (existing) return existing;
+    const next = typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `sess-${Math.random().toString(36).slice(2)}${Date.now()}`;
+    window.localStorage.setItem(SESSION_KEY, next);
+    return next;
+  } catch (err) {
+    return `sess-${Math.random().toString(36).slice(2)}${Date.now()}`;
+  }
+}
+
+async function trackVisit() {
+  try {
+    const customer = getCustomerSession();
+    await fetch(`${API_BASE}/analytics/visit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: getSessionId(),
+        member_id: customer?.id || null,
+        path: window.location.pathname,
+        referrer: document.referrer || null,
+        user_agent: navigator.userAgent,
+      }),
+    });
+  } catch (err) {
+    // Ignore analytics errors.
+  }
+}
 
 async function fetchProducts() {
   const res = await fetch(`${API_BASE}/products`);
@@ -133,6 +179,9 @@ async function loadProduct(id) {
 
 async function init() {
   try {
+    trackVisit();
+    if (analyticsTimer) clearInterval(analyticsTimer);
+    analyticsTimer = setInterval(trackVisit, ANALYTICS_HEARTBEAT_MS);
     products = await fetchProducts();
     if (products.length > 0) {
       await loadProduct(products[0].id);

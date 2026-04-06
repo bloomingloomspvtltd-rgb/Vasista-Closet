@@ -249,6 +249,54 @@ body:has(.admin-login) footer {
   gap: 18px;
 }
 
+.admin-traffic-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.admin-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-chart-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 40px;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--admin-muted);
+}
+
+.admin-chart-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: #efe8de;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-chart-bar span {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: var(--admin-accent);
+  border-radius: 999px;
+}
+
+.admin-chart-label {
+  font-weight: 600;
+  color: var(--admin-ink);
+}
+
+.admin-chart-value {
+  text-align: right;
+  font-weight: 600;
+  color: var(--admin-ink);
+}
+
 .admin-section-header {
   display: flex;
   justify-content: space-between;
