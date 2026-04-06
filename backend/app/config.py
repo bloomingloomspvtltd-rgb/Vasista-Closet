@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     delhivery_base_url: str = "https://staging-express.delhivery.com"
     delhivery_client_name: str = ""
     delhivery_invoice_path: str = ""
+    analytics_active_window_minutes: int = 5
 
     class Config:
         env_file = ".env"
