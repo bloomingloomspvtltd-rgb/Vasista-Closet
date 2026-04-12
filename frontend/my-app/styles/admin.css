@@ -396,31 +396,34 @@ body:has(.admin-login) footer {
 .admin-orders-card {
   padding: 0;
   overflow: hidden;
+  border-radius: 16px;
+  box-shadow: none;
+  border-color: #e5e5e7;
 }
 
 .admin-orders-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--admin-border);
-  background: #fbf9f5;
+  background: #fff;
 }
 
 .admin-orders-tabs {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .admin-orders-tab {
   border: 1px solid transparent;
-  background: #ede7df;
-  color: var(--admin-ink);
-  border-radius: 12px;
-  padding: 6px 12px;
+  background: transparent;
+  color: #4b4b4b;
+  border-radius: 10px;
+  padding: 6px 10px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -428,35 +431,36 @@ body:has(.admin-login) footer {
 }
 
 .admin-orders-tab.active {
-  background: #fff;
-  border-color: var(--admin-border);
-  box-shadow: 0 6px 14px rgba(33, 28, 22, 0.08);
+  background: #f1f1f1;
+  border-color: #e3e3e3;
+  box-shadow: none;
+  color: var(--admin-ink);
 }
 
 .admin-orders-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
 .admin-search input {
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--admin-border);
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #e3e3e3;
   background: #fff;
   font-size: 13px;
-  min-width: 240px;
+  min-width: 200px;
 }
 
 .admin-orders-summary {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
+  padding: 8px 16px;
   font-size: 13px;
   color: var(--admin-muted);
-  border-bottom: 1px solid var(--admin-border);
+  border-bottom: 1px solid #ececec;
   background: #fff;
 }
 
@@ -471,21 +475,21 @@ body:has(.admin-login) footer {
   grid-template-columns: 36px 110px 160px 220px 140px 110px 150px 170px 90px 160px 150px;
   gap: 12px;
   align-items: center;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--admin-border);
+  padding: 10px 16px;
+  border-bottom: 1px solid #ececec;
   min-width: 1280px;
 }
 
 .admin-orders-row:hover {
-  background: #fbf9f5;
+  background: #fafafa;
 }
 
 .admin-orders-head {
-  background: #f7f3ee;
-  color: var(--admin-muted);
+  background: #fafafa;
+  color: #6b6b6b;
   font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   font-weight: 600;
 }
 
