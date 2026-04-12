@@ -139,7 +139,11 @@ export default function OrderDetailPage({ params }) {
   };
 
   const loadOrder = async () => {
-    if (!orderId) return;
+    if (!orderId) {
+      setLoading(false);
+      setError("Missing order id.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -355,6 +359,7 @@ export default function OrderDetailPage({ params }) {
                         <div className="admin-strong">{item.name || "Item"}</div>
                         <div className="admin-subtext">
                           Qty {item.quantity || 1}
+                          {item.sku ? ` · SKU ${item.sku}` : ""}
                         </div>
                       </div>
                       <div className="admin-order-item-price">
