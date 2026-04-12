@@ -68,6 +68,63 @@ class OrderUpdate(BaseModel):
     shipping_address: Optional[ShippingAddress] = None
 
 
+async def _enrich_order(db, doc: dict) -> dict:
+    if not doc:
+        return doc
+    items = doc.get("items") or []
+    product_ids = []
+    for item in items:
+        pid = item.get("product_id")
+        if not pid:
+            continue
+        try:
+            product_ids.append(to_object_id(pid))
+        except ValueError:
+            continue
+    product_map = {}
+    if product_ids:
+        products = await db.products.find({"_id": {"$in": product_ids}}).to_list(200)
+        for product in products:
+            product_map[str(product["_id"])] = product
+    for item in items:
+        pid = item.get("product_id")
+        if not pid:
+            continue
+        product = product_map.get(str(pid))
+        if not product:
+            continue
+        if not item.get("name"):
+            item["name"] = product.get("name")
+        if not item.get("sku") and product.get("sku"):
+            item["sku"] = product.get("sku")
+        if not item.get("image"):
+            images = product.get("images") or []
+            if images:
+                item["image"] = images[0]
+    doc["items"] = items
+    if not doc.get("shipping_address") and doc.get("customer_id"):
+        try:
+            cid = to_object_id(doc.get("customer_id"))
+            customer = await db.customers.find_one({"_id": cid})
+        except ValueError:
+            customer = None
+        if customer:
+            addresses = customer.get("addresses") or []
+            if addresses:
+                address = addresses[0] or {}
+                doc["shipping_address"] = {
+                    **address,
+                    "name": " ".join(
+                        filter(None, [customer.get("first_name"), customer.get("last_name")])
+                    )
+                    or customer.get("first_name")
+                    or "Customer",
+                    "email": customer.get("email"),
+                    "phone": customer.get("phone"),
+                }
+    return doc
+
+
 @router.get("", dependencies=[Depends(get_current_user)])
 async def list_orders():
     db = get_db()
@@ -131,6 +188,7 @@ async def get_order(order_id: str):
     doc = await db.orders.find_one({"_id": oid})
     if not doc:
         raise HTTPException(status_code=404, detail="Order not found")
+    doc = await _enrich_order(db, doc)
     return serialize_doc(doc)
 
 
