@@ -101,6 +101,29 @@ async def _enrich_order(db, doc: dict) -> dict:
             images = product.get("images") or []
             if images:
                 item["image"] = images[0]
+        if not item.get("size"):
+            sizes = []
+            variants = product.get("variants") or []
+            for variant in variants:
+                size = variant.get("size")
+                if size and size not in sizes:
+                    sizes.append(size)
+            if not sizes:
+                size_entries = product.get("sizes") or []
+                for entry in size_entries:
+                    if isinstance(entry, dict):
+                        size = entry.get("name")
+                    else:
+                        size = entry
+                    if size and size not in sizes:
+                        sizes.append(size)
+            if len(sizes) == 1:
+                item["size"] = sizes[0]
+        if not item.get("color"):
+            colors = product.get("colors") or []
+            color_names = [color.get("name") for color in colors if color.get("name")]
+            if len(color_names) == 1:
+                item["color"] = color_names[0]
     doc["items"] = items
     if not doc.get("shipping_address") and doc.get("customer_id"):
         try:

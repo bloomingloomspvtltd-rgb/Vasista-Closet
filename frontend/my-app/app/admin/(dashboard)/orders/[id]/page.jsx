@@ -472,7 +472,7 @@ export default function OrderDetailPage() {
                           <div className="admin-subtext">
                             Qty {item.quantity || 1}
                             {sku ? ` - SKU ${sku}` : ""}
-                            {item.size ? ` - Size ${item.size}` : ""}
+                            {item.size ? ` - Size ${item.size}` : " - Size not recorded"}
                             {item.color ? ` - ${item.color}` : ""}
                           </div>
                         </div>
