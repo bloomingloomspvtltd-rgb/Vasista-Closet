@@ -484,7 +484,7 @@ export default function OrderDetailPage() {
                         </div>
                       </div>
                     );
-                  })}
+                  }))}
               </div>
               <div className="admin-order-actions-row">
                 <button className="admin-secondary" type="button">
