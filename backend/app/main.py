@@ -21,7 +21,7 @@ from .routers import (
 
 app = FastAPI(title="Visista API", version="1.0.0")
 
-uploads_dir = Path(__file__).resolve().parents[1] / "uploads"
+uploads_dir = Path(settings.uploads_dir).expanduser() if settings.uploads_dir else Path(__file__).resolve().parents[1] / "uploads"
 uploads_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 

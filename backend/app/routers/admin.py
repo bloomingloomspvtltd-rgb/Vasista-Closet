@@ -5,11 +5,12 @@ import uuid
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from ..auth import get_current_user
+from ..config import settings
 from ..db import get_db
 from ..utils import serialize_doc
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(get_current_user)])
-UPLOAD_DIR = Path(__file__).resolve().parents[2] / "uploads"
+UPLOAD_DIR = Path(settings.uploads_dir).expanduser() if settings.uploads_dir else Path(__file__).resolve().parents[2] / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 

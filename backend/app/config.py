@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     delhivery_client_name: str = ""
     delhivery_invoice_path: str = ""
     analytics_active_window_minutes: int = 5
+    uploads_dir: str = ""
 
     class Config:
         env_file = ".env"
