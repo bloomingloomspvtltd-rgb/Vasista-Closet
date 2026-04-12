@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { apiFetch } from "../../../../../lib/adminApi";
@@ -119,7 +120,8 @@ function formatAddress(address) {
   return parts.filter(Boolean);
 }
 
-export default function OrderDetailPage({ params }) {
+export default function OrderDetailPage() {
+  const params = useParams();
   const orderId = params?.id;
   const [order, setOrder] = useState(null);
   const [customer, setCustomer] = useState(null);
