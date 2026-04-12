@@ -23,6 +23,10 @@ class OrderItem(BaseModel):
     name: str
     price: float
     quantity: int
+    sku: str | None = None
+    size: str | None = None
+    color: str | None = None
+    image: str | None = None
 
 
 class RazorpayOrderCreate(BaseModel):
@@ -34,6 +38,7 @@ class RazorpayOrderCreate(BaseModel):
     total: float
     currency: str = "INR"
     notes: dict | None = None
+    shipping_address: dict | None = None
 
 
 class RazorpayVerifyPayload(BaseModel):
@@ -106,6 +111,7 @@ async def create_razorpay_order(payload: RazorpayOrderCreate):
         "payment_method": "razorpay",
         "payment_provider": "razorpay",
         "payment_status": "created",
+        "shipping_address": payload.shipping_address,
         "created_at": now,
         "updated_at": now,
     }

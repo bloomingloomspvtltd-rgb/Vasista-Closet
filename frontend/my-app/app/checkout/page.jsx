@@ -235,6 +235,16 @@ export default function CheckoutPage() {
         name: item.name,
         price: item.price,
         quantity: item.quantity,
+        sku: item.sku || null,
+        size: item.size || null,
+        color: item.color || null,
+        image:
+          (Array.isArray(item.images) && item.images.length > 0 ? item.images[0] : item.image) ||
+          (Array.isArray(item.colors) && item.colors.length > 0
+            ? (item.colors.find((color) => color?.name === item.color)?.images || [])[0] ||
+              item.colors.find((color) => color?.name === item.color)?.image
+            : null) ||
+          null,
       }));
 
       const subtotal = getTotalPrice();
@@ -248,6 +258,17 @@ export default function CheckoutPage() {
         discount_id: appliedCoupon?.id || null,
         discount_amount: discountAmount,
         total,
+        shipping_address: {
+          name: `${form.first_name} ${form.last_name}`.trim() || form.first_name || "Customer",
+          email: form.email || null,
+          phone: form.phone || null,
+          line1: addressPayload.line1,
+          line2: addressPayload.line2,
+          city: addressPayload.city,
+          state: addressPayload.state,
+          postal_code: addressPayload.postal_code,
+          country: addressPayload.country,
+        },
       };
 
       if (paymentMethod === "cod") {

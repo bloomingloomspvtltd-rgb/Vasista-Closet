@@ -18,6 +18,22 @@ class OrderItem(BaseModel):
     name: str
     price: float = Field(ge=0)
     quantity: int = Field(ge=1)
+    sku: Optional[str] = None
+    size: Optional[str] = None
+    color: Optional[str] = None
+    image: Optional[str] = None
+
+
+class ShippingAddress(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    line1: Optional[str] = None
+    line2: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    postal_code: Optional[str] = None
+    country: Optional[str] = None
 
 
 class OrderBase(BaseModel):
@@ -31,6 +47,7 @@ class OrderBase(BaseModel):
     payment_method: Optional[str] = None
     payment_provider: Optional[str] = None
     payment_status: Optional[str] = None
+    shipping_address: Optional[ShippingAddress] = None
 
 
 class OrderCreate(OrderBase):
@@ -48,6 +65,7 @@ class OrderUpdate(BaseModel):
     payment_method: Optional[str] = None
     payment_provider: Optional[str] = None
     payment_status: Optional[str] = None
+    shipping_address: Optional[ShippingAddress] = None
 
 
 @router.get("", dependencies=[Depends(get_current_user)])

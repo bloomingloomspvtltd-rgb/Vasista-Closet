@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { apiFetch } from "../../../../../lib/adminApi";
 import { createRazorpayRefund } from "../../../../../lib/storeApi";
+import { getRuntimeApiBase } from "../../../../../lib/apiBase";
 
 function formatCurrency(value) {
   const amount = Number(value || 0);
@@ -23,9 +24,9 @@ function formatOrderId(orderId) {
 }
 
 function formatDateLong(value) {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString("en-IN", {
     month: "long",
     day: "numeric",
@@ -33,6 +34,45 @@ function formatDateLong(value) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function normalizeImageUrl(url) {
+  if (!url) return "";
+  if (url.startsWith("data:")) return url;
+  const base = getRuntimeApiBase();
+  if (url.startsWith("/")) return `${base}${url}`;
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+        return `${base}${parsed.pathname}${parsed.search}`;
+      }
+      if (parsed.pathname.startsWith("/uploads/")) {
+        return `${base}${parsed.pathname}`;
+      }
+    } catch (err) {
+      return url;
+    }
+    return url;
+  }
+  return `${base}/${url}`;
+}
+
+function getProductImage(product, preferredColor) {
+  if (!product) return "";
+  const colors = Array.isArray(product?.colors) ? product.colors : [];
+  if (colors.length > 0) {
+    const match = preferredColor
+      ? colors.find((color) => color?.name === preferredColor)
+      : colors[0];
+    if (Array.isArray(match?.images) && match.images.length > 0) {
+      return normalizeImageUrl(match.images[0]);
+    }
+    if (match?.image) return normalizeImageUrl(match.image);
+  }
+  const images = Array.isArray(product?.images) ? product.images : [];
+  if (images.length > 0) return normalizeImageUrl(images[0]);
+  return "";
 }
 
 function getCustomerName(order, customer) {
@@ -109,13 +149,16 @@ function formatAddress(address) {
   if (typeof address === "string") return [address];
   const parts = [
     address.name,
+    address.address_line1,
     address.line1,
+    address.address_line2,
     address.line2,
     address.city,
     address.state,
     address.postal_code || address.zip,
     address.country,
     address.phone,
+    address.email,
   ];
   return parts.filter(Boolean);
 }
@@ -125,6 +168,7 @@ export default function OrderDetailPage() {
   const orderId = params?.id;
   const [order, setOrder] = useState(null);
   const [customer, setCustomer] = useState(null);
+  const [productMap, setProductMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -194,6 +238,48 @@ export default function OrderDetailPage() {
     loadOrder();
   }, [orderId]);
 
+  useEffect(() => {
+    let active = true;
+    const fetchProducts = async () => {
+      if (!order?.items || order.items.length === 0) {
+        setProductMap({});
+        return;
+      }
+      const productIds = Array.from(
+        new Set(
+          order.items
+            .map((item) => item?.product_id)
+            .filter((value) => value && String(value).length > 0)
+        )
+      );
+      if (productIds.length === 0) {
+        setProductMap({});
+        return;
+      }
+      try {
+        const entries = await Promise.all(
+          productIds.map(async (productId) => {
+            try {
+              const product = await apiFetch(`/products/${productId}`);
+              return [productId, product];
+            } catch (err) {
+              return [productId, null];
+            }
+          })
+        );
+        if (!active) return;
+        setProductMap(Object.fromEntries(entries));
+      } catch (err) {
+        if (!active) return;
+        setProductMap({});
+      }
+    };
+    fetchProducts();
+    return () => {
+      active = false;
+    };
+  }, [order]);
+
   const items = Array.isArray(order?.items) ? order.items : [];
   const subtotal = useMemo(() => {
     return items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1), 0);
@@ -207,7 +293,21 @@ export default function OrderDetailPage() {
     order?.shipping ||
     order?.delivery_address ||
     order?.address ||
+    customer?.addresses?.[0] ||
     null;
+
+  const shippingContact = shippingAddress
+    ? {
+        ...shippingAddress,
+        name:
+          shippingAddress.name ||
+          `${customer?.first_name || ""} ${customer?.last_name || ""}`.trim() ||
+          customer?.first_name ||
+          "Customer",
+        email: shippingAddress.email || customer?.email || null,
+        phone: shippingAddress.phone || customer?.phone || null,
+      }
+    : null;
 
   const timeline = useMemo(() => {
     if (!order) return [];
@@ -355,24 +455,36 @@ export default function OrderDetailPage() {
                 {items.length === 0 ? (
                   <div className="admin-muted">No items found.</div>
                 ) : (
-                  items.map((item, index) => (
-                    <div className="admin-order-item" key={`${item.name}-${index}`}>
-                      <div className="admin-order-item-info">
-                        <div className="admin-strong">{item.name || "Item"}</div>
-                        <div className="admin-subtext">
-                          Qty {item.quantity || 1}
-                          {item.sku ? ` · SKU ${item.sku}` : ""}
+                  items.map((item, index) => {
+                    const product = item.product_id ? productMap[item.product_id] : null;
+                    const imageUrl =
+                      item.image ? normalizeImageUrl(item.image) : getProductImage(product, item.color);
+                    const sku = item.sku || product?.sku || null;
+                    return (
+                      <div className="admin-order-item" key={`${item.name}-${index}`}>
+                        {imageUrl ? (
+                          <div className="admin-order-item-thumb">
+                            <img src={imageUrl} alt={item.name || "Item"} />
+                          </div>
+                        ) : null}
+                        <div className="admin-order-item-info">
+                          <div className="admin-strong">{item.name || "Item"}</div>
+                          <div className="admin-subtext">
+                            Qty {item.quantity || 1}
+                            {sku ? ` - SKU ${sku}` : ""}
+                            {item.size ? ` - Size ${item.size}` : ""}
+                            {item.color ? ` - ${item.color}` : ""}
+                          </div>
+                        </div>
+                        <div className="admin-order-item-price">
+                          <span>{formatCurrency(item.price)}</span>
+                          <span className="admin-order-item-total">
+                            {formatCurrency(Number(item.price || 0) * Number(item.quantity || 1))}
+                          </span>
                         </div>
                       </div>
-                      <div className="admin-order-item-price">
-                        <span>{formatCurrency(item.price)}</span>
-                        <span className="admin-order-item-total">
-                          {formatCurrency(Number(item.price || 0) * Number(item.quantity || 1))}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                )}
+                    );
+                  })}
               </div>
               <div className="admin-order-actions-row">
                 <button className="admin-secondary" type="button">
@@ -395,7 +507,7 @@ export default function OrderDetailPage() {
               </div>
               <div className="admin-order-summary-row">
                 <span>Discount</span>
-                <span>{discount ? `- ${formatCurrency(discount)}` : "—"}</span>
+                <span>{discount ? `- ${formatCurrency(discount)}` : "-"}</span>
               </div>
               <div className="admin-order-summary-row">
                 <span>Shipping</span>
@@ -407,7 +519,7 @@ export default function OrderDetailPage() {
               </div>
               <div className="admin-order-summary-row">
                 <span>Paid</span>
-                <span>{getPaymentStatusLabel(order) === "Paid" ? formatCurrency(total) : "—"}</span>
+                <span>{getPaymentStatusLabel(order) === "Paid" ? formatCurrency(total) : "-"}</span>
               </div>
             </div>
           </div>
@@ -464,10 +576,10 @@ export default function OrderDetailPage() {
               </div>
               <div className="admin-order-subsection">
                 <div className="admin-order-subtitle">Shipping address</div>
-                {formatAddress(shippingAddress).length === 0 ? (
+                {formatAddress(shippingContact).length === 0 ? (
                   <div className="admin-subtext">No address provided.</div>
                 ) : (
-                  formatAddress(shippingAddress).map((line, index) => (
+                  formatAddress(shippingContact).map((line, index) => (
                     <div className="admin-subtext" key={`${line}-${index}`}>
                       {line}
                     </div>
@@ -513,3 +625,4 @@ export default function OrderDetailPage() {
     </div>
   );
 }
+
