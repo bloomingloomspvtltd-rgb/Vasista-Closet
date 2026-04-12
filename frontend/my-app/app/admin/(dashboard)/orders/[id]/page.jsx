@@ -126,16 +126,52 @@ export default function OrderDetailPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const withTimeout = async (promise, ms = 10000) => {
+    let timeoutId;
+    const timeout = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error("Request timed out.")), ms);
+    });
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
+
   const loadOrder = async () => {
     if (!orderId) return;
     setLoading(true);
     setError("");
     try {
-      const data = await apiFetch(`/orders/${orderId}`);
+      let data = null;
+      try {
+        data = await withTimeout(apiFetch(`/orders/${orderId}`), 10000);
+      } catch (err) {
+        if (err?.status === 404) {
+          data = null;
+        } else {
+          throw err;
+        }
+      }
+
+      if (!data) {
+        const list = await withTimeout(apiFetch("/orders"), 10000);
+        const match = Array.isArray(list)
+          ? list.find((item) => String(item.id) === String(orderId))
+          : null;
+        if (!match) {
+          throw new Error("Order not found.");
+        }
+        data = match;
+      }
+
       setOrder(data);
       if (data?.customer_id) {
         try {
-          const customerData = await apiFetch(`/customers/${data.customer_id}`);
+          const customerData = await withTimeout(
+            apiFetch(`/customers/${data.customer_id}`),
+            10000
+          );
           setCustomer(customerData);
         } catch (err) {
           setCustomer(null);
@@ -227,7 +263,14 @@ export default function OrderDetailPage({ params }) {
   if (!order) {
     return (
       <div className="admin-page">
-        {error ? <div className="admin-error">{error}</div> : null}
+        {error ? (
+          <div className="admin-error">
+            <div>{error}</div>
+            <button className="admin-secondary" type="button" onClick={loadOrder}>
+              Retry
+            </button>
+          </div>
+        ) : null}
         <div className="admin-empty">Order not found.</div>
       </div>
     );
@@ -277,7 +320,14 @@ export default function OrderDetailPage({ params }) {
         </div>
       </div>
 
-      {error ? <div className="admin-error">{error}</div> : null}
+      {error ? (
+        <div className="admin-error">
+          <div>{error}</div>
+          <button className="admin-secondary" type="button" onClick={loadOrder}>
+            Retry
+          </button>
+        </div>
+      ) : null}
 
       <div className="admin-order-grid">
         <div className="admin-order-main">
