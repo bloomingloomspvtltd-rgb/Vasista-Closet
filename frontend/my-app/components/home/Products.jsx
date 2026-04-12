@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { getProducts } from "@/lib/storeApi";
 import { getRuntimeApiBase } from "@/lib/apiBase";
@@ -54,6 +55,7 @@ export default function Products() {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [products, setProducts] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     const load = async () => {
@@ -116,7 +118,18 @@ export default function Products() {
                 <div className="product-price">
                   <span className="price">Rs. {product.price}</span>
                 </div>
-                <button className="add-to-cart-btn" onClick={() => addToCart(product, 1)}>
+                <button
+                  className="add-to-cart-btn"
+                  onClick={() => {
+                    const hasVariants = Array.isArray(product?.variants) && product.variants.length > 0;
+                    const hasSizes = Array.isArray(product?.sizes) && product.sizes.length > 0;
+                    if (hasVariants || hasSizes) {
+                      router.push(`/product/${productId}`);
+                      return;
+                    }
+                    addToCart(product, 1);
+                  }}
+                >
                   Add to cart
                 </button>
               </div>

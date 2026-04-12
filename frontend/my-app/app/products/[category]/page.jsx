@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import { getCategories, getProducts } from "@/lib/storeApi";
 import { getRuntimeApiBase } from "@/lib/apiBase";
@@ -98,6 +98,7 @@ export default function CategoryPage() {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const params = useParams();
+  const router = useRouter();
   const categoryParam = decodeURIComponent(params.category || "");
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -218,6 +219,12 @@ export default function CategoryPage() {
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
+                      const hasVariants = Array.isArray(product?.variants) && product.variants.length > 0;
+                      const hasSizes = Array.isArray(product?.sizes) && product.sizes.length > 0;
+                      if (hasVariants || hasSizes) {
+                        router.push(`/product/${productId}`);
+                        return;
+                      }
                       addToCart(product, 1);
                     }}
                   >

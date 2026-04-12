@@ -3,10 +3,12 @@
 import { useCart } from "@/lib/CartContext";
 import { useWishlist } from "@/lib/WishlistContext";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function WishlistPage() {
   const { addToCart } = useCart();
   const { wishlistItems, removeFromWishlist } = useWishlist();
+  const router = useRouter();
 
   return (
     <div className="wishlist-page">
@@ -42,7 +44,21 @@ export default function WishlistPage() {
                 <div className="wishlist-info">
                   <h3>{item.name}</h3>
                   <div className="wishlist-price">Rs. {item.price}</div>
-                  <button className="add-to-cart-btn" onClick={() => addToCart(item, 1)}>
+                  <button
+                    className="add-to-cart-btn"
+                    onClick={() => {
+                      const hasVariants = Array.isArray(item?.variants) && item.variants.length > 0;
+                      const hasSizes = Array.isArray(item?.sizes) && item.sizes.length > 0;
+                      if (hasVariants || hasSizes) {
+                        const productId = item?.id ?? item?._id ?? item?.slug ?? item?.name;
+                        if (productId) {
+                          router.push(`/product/${productId}`);
+                          return;
+                        }
+                      }
+                      addToCart(item, 1);
+                    }}
+                  >
                     Add to cart
                   </button>
                   <button

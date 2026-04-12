@@ -25,6 +25,13 @@
   gap: 16px;
 }
 
+.cart-item-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: #6f6a63;
+}
+
 .cart-item-image {
   width: 96px;
   height: 120px;

@@ -75,6 +75,10 @@ export default function CartPage() {
                 <div className="cart-item-image cart-item-image-fallback">No image</div>
               )}
               <strong>{item.name}</strong>
+              <div className="cart-item-meta">
+                <span>Size: {item.size || "Not selected"}</span>
+                {item.color ? <span>Color: {item.color}</span> : null}
+              </div>
               <div>Rs. {item.price}</div>
             </div>
             <div className="cart-actions">
