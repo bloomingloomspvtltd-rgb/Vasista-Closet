@@ -30,11 +30,15 @@ function normalizeImageUrl(url) {
   if (url.startsWith("http://") || url.startsWith("https://")) {
     try {
       const parsed = new URL(url);
+      const baseUrl = new URL(base);
+      if (parsed.protocol === "http:" && baseUrl.protocol === "https:" && parsed.hostname === baseUrl.hostname) {
+        return `${baseUrl.origin}${parsed.pathname}${parsed.search}`;
+      }
       if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
         return `${base}${parsed.pathname}${parsed.search}`;
       }
       if (parsed.pathname.startsWith("/uploads/")) {
-        return `${base}${parsed.pathname}`;
+        return `${baseUrl.origin}${parsed.pathname}`;
       }
     } catch (err) {
       return url;
