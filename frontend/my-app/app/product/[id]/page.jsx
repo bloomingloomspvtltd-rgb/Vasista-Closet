@@ -406,7 +406,9 @@ export default function ProductDetailPage() {
             </button>
           </div>
             <div className="size-options">
-              {sizeOptions.length === 0 ? (
+              {loading ? (
+                <span className="size-empty">Loading sizes...</span>
+              ) : sizeOptions.length === 0 ? (
                 <span className="size-empty">No sizes listed</span>
               ) : (
                 sizeOptions.map((size) => {
