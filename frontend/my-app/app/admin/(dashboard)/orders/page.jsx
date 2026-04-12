@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import AdminTopbar from "../../../../components/admin/AdminTopbar";
@@ -360,10 +361,18 @@ export default function OrdersPage() {
                       aria-label={`Select order ${formatOrderId(order.id)}`}
                     />
                   </div>
-                  <div className="admin-orders-id">{formatOrderId(order.id)}</div>
+                  <div className="admin-orders-id">
+                    <Link className="admin-orders-link" href={`/admin/orders/${order.id}`}>
+                      {formatOrderId(order.id)}
+                    </Link>
+                  </div>
                   <div>{formatOrderDate(order.created_at || order.updated_at)}</div>
                   <div className="admin-orders-customer">
-                    <div className="admin-strong">{getCustomerName(order)}</div>
+                    <div className="admin-strong">
+                      <Link className="admin-orders-link" href={`/admin/orders/${order.id}`}>
+                        {getCustomerName(order)}
+                      </Link>
+                    </div>
                     {order.customer_id ? (
                       <div className="admin-subtext">{order.customer_id}</div>
                     ) : null}
